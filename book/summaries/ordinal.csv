@@ -1,0 +1,57 @@
+﻿Model,Location effects,Random effects
+m1,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|ID) + (1|Year),1
+m2,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|ID) + (1|Year),1
+m3,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|ID) + (1|Year),1
+m4,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|ID) + (1|Year),1
+m5,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + (1|q|RING)
+m6,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + (1|q|RING)
+m7,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + (1|q|RING)
+m8,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|q|ID) + (1|Year),1 + (1|q|RING)
+m9,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|ID) + (1|Year),1 + Phenological mismatch + Age + Time + (1|q|ID)
+m10,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|ID) + (1|Year),1 + Phenological mismatch + Age + Time + (1|q|ID)
+m11,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|ID) + (1|Year),1 + Phenological mismatch + Age + Time + (1|q|ID)
+m12,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|ID) + (1|Year),1 + Phenological mismatch + Age + Time + (1|q|ID)
+m13,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+m14,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+m15,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+m16,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+Q1,Phenological mismatch + I(Phenological mismatch^2) +Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|ID) + (1|Year),1
+Q2,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|ID) + (1|Year),1
+Q3,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|ID) + (1|Year),1
+Q4,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|ID) + (1|Year),1
+Q5,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + (1|q|RING)
+Q6,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + (1|q|RING)
+Q7,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + (1|q|RING)
+Q8,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|q|ID) + (1|Year),1 + (1|q|RING)
+Q9,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + Phenological mismatch + I(Phenological mismatch^2) + Age + I(Age^2) + Time + (1|q|ID)
+Q10,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + Phenological mismatch + I(Phenological mismatch^2) + Age + I(Age^2) + Time + (1|q|ID)
+Q11,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + Phenological mismatch + I(Phenological mismatch^2) + Age + I(Age^2) + Time + (1|q|ID)
+Q12,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|q|ID) + (1|Year),1 + Phenological mismatch + I(Phenological mismatch^2) + Age + I(Age^2) + Time + (1|q|ID)
+Q13,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + Phenological mismatch + I(Phenological mismatch^2) + Age + I(Age^2) + Time + (1|q|ID)
+Q14,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + Phenological mismatch + I(Phenological mismatch^2) + Age + I(Age^2) + Time + (1|q|ID)
+Q15,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + Phenological mismatch + I(Phenological mismatch^2) + Age + I(Age^2) + Time + (1|q|ID)
+Q16,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|q|ID) + (1|Year),1 + Phenological mismatch + I(Phenological mismatch^2) + Age + I(Age^2) + Time + (1|q|ID)
+Q17,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+Q18,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+Q19,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+Q20,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+Q21,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+Q22,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+Q23,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+Q24,Phenological mismatch +  I(Phenological mismatch^2) + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Phenological mismatch|q|ID) + (1|Year),1 + Phenological mismatch + Age + I(Age^2) + Time + (1|q|ID)
+ABS1,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|ID) + (1|Year),1
+ABS2,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|ID) + (1|Year),1
+ABS3,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|ID) + (1|Year),1
+ABS4,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Absolute mismatch|ID) + (1|Year),1
+ABS5,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + (1|q|RING)
+ABS6,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + (1|q|RING)
+ABS7,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + (1|q|RING)
+ABS8,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Absolute mismatch|q|ID) + (1|Year),1 + (1|q|RING)
+ABS9,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|ID) + (1|Year),1 + Absolute mismatch + Age + Time + (1|q|ID)
+ABS10,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|ID) + (1|Year),1 + Absolute mismatch + Age + Time + (1|q|ID)
+ABS11,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|ID) + (1|Year),1 + Absolute mismatch + Age + Time + (1|q|ID)
+ABS12,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Absolute mismatch|ID) + (1|Year),1 + Absolute mismatch + Age + Time + (1|q|ID)
+ABS13,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + Absolute mismatch + Age + I(Age^2) + Time + (1|q|ID)
+ABS14,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + Absolute mismatch + Age + I(Age^2) + Time + (1|q|ID)
+ABS15,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + Absolute mismatch + Age + I(Age^2) + Time + (1|q|ID)
+ABS16,Absolute mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Absolute mismatch|q|ID) + (1|Year),1 + Absolute mismatch + Age + I(Age^2) + Time + (1|q|ID)

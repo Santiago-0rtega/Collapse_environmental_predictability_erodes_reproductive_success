@@ -1,0 +1,632 @@
+---
+title: "S3. Model fitting workflow"
+---
+
+This section describes the complete workflow used to fit the models. Two sets of analyses were conducted:
+
+-   Location–scale models of bloom phenology
+
+-   Hierarchical Bayesian models of phenological mismatch and reproductive performance (main analysis, described here as supplement to the results).
+
+```{r}
+#| label: setup-model-fitting
+#| include: TRUE
+
+# For data manipulation (loads dplyr, tidyr, purrr, tibble, etc.)
+library(tidyverse)
+
+# For file path management
+library(here)
+
+# The core package for Bayesian hierarchical modeling
+library(brms)
+
+# For model comparison and cross-validation (LOO)
+library(loo)
+
+# For creating interactive HTML tables
+library(DT)
+
+# For managing parallel processing
+library(future)
+```
+
+## Configuring Parallel Processing
+
+To accelerate model fitting, a parallel processing strategy was implemented using the `future` package. This approach leverages inter-chain parallelization, where each of the model's independent Markov chains is run simultaneously on a separate CPU core.
+
+The `future::plan(multisession, workers=4)` command configures four parallel R sessions (workers). When `brms` is subsequently run with chains = 4, it automatically distributes one chain to each worker. The efficient cmdstanr backend was also selected, substantially reducing overall computation time by executing the chains concurrently rather than sequentially.
+
+```{r}
+
+options(mc.cores = parallel::detectCores(), brms.backend = "cmdstanr")
+future::plan(multisession, workers=4) 
+```
+
+::: {.callout-tip appearance="simple" icon="false"}
+Threading can accelerate computation by distributing processes across multiple cores. This requires installing the cmdstanr package and its CmdStan backend.
+
+```{r}
+#| code-fold: FALSE
+#| eval: false
+#| label: Set up CmdStan and confirm proper installation
+cmdstanr::install_cmdstan()
+cmdstanr::check_cmdstan_toolchain()
+cmdstanr::cmdstan_version()
+
+```
+:::
+
+# Location–scale models of bloom phenology
+
+This model examined how both the mean timing and variability of bloom onset (days since Winter solstice)have changed over years.
+
+::: {.callout-note title="Variable definitions"}
+-   delta5: Bloom onset date at the 5% threshold.
+
+-   delta15: Bloom onset date at the 15% threshold.
+
+-   delta25: Bloom onset date at the 25% threshold.
+
+-   TIME: Calendar year, centered.
+:::
+
+## Data transformation
+
+Bloom onset dates were converted into days since the previous winter solstice
+
+```{r}
+#| label: bloom-data
+#| evalve: false
+dat<-read.csv(here("data","bloom_dates.csv"))
+dat <- dat %>%
+  mutate(
+    # Convert dates
+    bloom_start_thr5_as_date = as.Date(bloom_start_thr5, format = "%d/%m/%Y"),
+    bloom_start_thr15_as_date = as.Date(bloom_start_thr15, format = "%d/%m/%Y"),
+    bloom_start_thr25_as_date = as.Date(bloom_start_thr25, format = "%d/%m/%Y"),
+    winter_start_date = as.Date(paste0(season_year - 1, "-12-21")),
+
+    # Calculate days since solstice
+    delta5 = as.numeric(difftime(bloom_start_thr5_as_date, winter_start_date, units = "days")),
+    delta15 = as.numeric(difftime(bloom_start_thr15_as_date, winter_start_date, units = "days")),
+    delta25 = as.numeric(difftime(bloom_start_thr25_as_date, winter_start_date, units = "days")),
+
+    # Factor year
+    TIME = as.numeric(scale(season_year, center = TRUE, scale = FALSE)))%>%
+  select( -starts_with("bloom_start_thr"), -winter_start_date)
+
+
+
+```
+
+## Model function
+
+A wrapper function was used to fit Gaussian location–scale models for each bloom threshold (5%, 15%, 25%).
+
+```{r}
+#| label: bloom-function
+#| evalve: false
+run_location_scale_models <- function(response_vars, data) {
+  if (!dir.exists(here("Rdata"))) dir.create(here("Rdata"))
+  
+  purrr::walk(response_vars, function(var) {
+    model_formula <- bf(
+      as.formula(paste(var, "~ 1 + TIME")),
+      sigma ~ 1 + TIME
+    )
+    
+    file_path <- here("Rdata", paste0("model_", var, ".rds"))
+    model_family <- gaussian()
+    model_priors <- get_prior(model_formula, data = data, family = model_family)
+    
+    fit <- tryCatch({
+      brm(
+        formula = model_formula,
+        data = data,
+        prior = model_priors,
+        family = model_family,
+        iter = 6000, warmup = 2000, chains = 4, seed = 123, init = 0,
+        control = list(adapt_delta = 0.99, max_treedepth = 15),
+        file = file_path,
+        file_refit = "on_change"
+      )
+    }, error = function(e) {
+      cat("Error fitting model for:", var, "\n")
+      cat("Error message:", e$message, "\n")
+      return(NULL)
+    })
+    
+    if (!is.null(fit)) cat("Saved model for:", var, "to", file_path, "\n")
+  })
+}
+```
+
+## Model execution
+
+```{r}
+#| label: bloom-ex
+#| evalve: false
+
+# Bloom onset (delta variables)
+delta_vars <- c("delta5", "delta15", "delta25")
+run_location_scale_models(response_vars = delta_vars, data = dat)
+```
+
+# Hierarchical Bayesian models of reproductive performance
+
+## Data preparation
+
+Before fitting the models, the primary dataset was loaded and pre-processed. Separate data frames were created for males and females, with the following key steps:
+
+-   Type conversion: Variables were converted to the appropriate type. Reproductive outcome (`FLEDS`) was encoded as ordered factors for use in cumulative ordinal models.
+
+-   Centering of continious predictors: `TIME`, `X5MISMATCH`,`AGE`, `AFR`, `LONGEVITY`.
+
+-   Identifiers: Year (YEAR) and individual identity (RING) were treated as factors.
+
+::: {.callout-note title="Variable definitions"}
+-   X5MISMATCH: Phenological mismatch at the 5% bloom threshold (days).
+
+-   FLEDS: Number of fledged chicks (ordinal).
+
+-   TIME: Calendar year, centered.
+
+-   ZX5MISMATCH: Centered phenological mismatch (5% threshold).
+
+-   AGE: Age of the individual, centered.
+
+-   AFR: Age at first reproduction, centered.
+
+-   LONGEVITY: Age at last observation (proxy for lifespan), centered.
+
+-   YEAR: Calendar year of observation (factor).
+
+-   RING: Individual identifier (factor).
+:::
+
+::: panel-tabset
+
+## Load female data
+
+```{r}
+#| label: Data preparation females
+dat <- read.csv(here("data", "Lay_date_mismatches_250702.csv")) %>%
+  subset(SEX == 1) %>%
+  mutate(
+    # First, ensure columns that will be used for scaling are numeric
+    across(c(X5MISMATCH, AGE, AFR, LONGEVITY), as.numeric),
+    
+    # Second, create new scaled variables from existing columns
+    TIME = scale(YEAR, center = TRUE, scale = FALSE)[,1],
+    ZX5MISMATCH = scale(X5MISMATCH, center = TRUE, scale = FALSE)[,1],
+    ABSMATCH = scale(abs(X5MISMATCH), center =TRUE, scale =FALSE)[,1],
+    # Third, scale the other numeric predictors
+    AGE = scale(AGE, center = TRUE, scale = FALSE)[,1],
+    AFR = scale(AFR, center = TRUE, scale = FALSE)[,1],
+    LONGEVITY = scale(LONGEVITY, center = TRUE, scale = FALSE)[,1],
+    
+    # Finally, convert grouping and outcome variables to factors
+    YEAR = as.factor(YEAR),
+    RING = as.factor(RING),
+    FLEDS = factor(FLEDS, levels = 0:3, ordered = TRUE),
+    
+  )
+```
+## Load male data
+
+```{r}
+#| label: Data preparation male
+dat0 <- read.csv(here("data", "Lay_date_mismatches_250702.csv")) %>%
+  subset(SEX ==0) %>%
+  mutate(
+    across(c(X5MISMATCH, AGE, AFR, LONGEVITY), as.numeric),
+    
+    TIME = scale(YEAR, center = TRUE, scale = FALSE)[,1],
+    ZX5MISMATCH = scale(X5MISMATCH, center = TRUE, scale = FALSE)[,1],
+    
+    AGE = scale(AGE, center = TRUE, scale = FALSE)[,1],
+    AFR = scale(AFR, center = TRUE, scale = FALSE)[,1],
+    LONGEVITY = scale(LONGEVITY, center = TRUE, scale = FALSE)[,1],
+    
+    YEAR = as.factor(YEAR),
+    RING = as.factor(RING),
+    FLEDS = factor(FLEDS, levels = 0:3, ordered = TRUE),
+    
+  )
+```
+
+
+:::
+
+## Models syntax
+
+Two model families were used:
+
+-   Gaussian models for continuous responses (e.g., phenological mismatch).
+
+-   Cumulative ordinal models for ordered categorical responses (e.g., clutch size and fledgling success).
+
+::: panel-tabset
+## Gaussian models (Phenological mismatch)
+
+```{r}
+#| label: Gaussian models
+#| echo: false
+dfg <- read.csv(here("summaries","gaussian.csv"))
+DT::datatable(dfg, options = list(pageLength = 5))
+```
+
+## Ordinal models (Number of fledglings)
+
+```{r}
+#| label: Ordinal models
+#| echo: false
+dfo <- read.csv(here("summaries","ordinal.csv"))
+DT::datatable(dfo, options = list(pageLength = 5))
+```
+:::
+
+# Automated model fitting workflow
+
+To systematically evaluate candidate models, we developed a custom R function, run_analysis_workflow(). This function automates model fitting and evaluation by:
+
+-   Defining candidate models: Iterating over combinations of fixed and random effects structures.
+
+-   Flexibility: Handling Gaussian and ordinal model families.
+
+-   Modeling auxiliary parameters: Estimating residual standard deviation (`sigma`) in Gaussian models or the discrimination parameter (`disc`) in ordinal models.
+
+-   Error handling and efficiency: Skipping models already fitted, saving results automatically, and using `tryCatch` to prevent failures from halting the workflow.
+
+-   Model evaluation: Saving both the fitted models and their leave-one-out cross-validation (`LOO`) objects.
+
+::: panel-tabset
+## Define Fixed Effects Structures
+
+```{r}
+#| label: Fixed Effects 
+#| evalve: false
+
+FIXED_EFFECTS_ORDINAL_FULL  <- "ZX5MISMATCH + TIME + AGE + I(AGE^2) + AFR + LONGEVITY"
+
+FIXED_EFFECTS_ORDINAL_QUADMATCH  <- "ZX5MISMATCH + I(ZX5MISMATCH^2) + TIME + AGE + I(AGE^2) + AFR + LONGEVITY"
+
+FIXED_EFFECTS_ORDINAL_ABSMATCH  <- "ABSMATCH + TIME + AGE + I(AGE^2) + AFR + LONGEVITY"
+
+
+FIXED_EFFECTS_GAUSSIAN      <- "AGE + I(AGE^2) + TIME + AFR + LONGEVITY"
+```
+
+## Function
+
+```{r}
+#| label: Custom function to fit hierarchical Bayesian models (females)
+#| eval: false
+# 2. MASTER WORKFLOW FUNCTION
+# ==============================================================================
+#' A flexible function to run various brms analysis workflows.
+run_analysis_workflow <- function(analysis_name, response_var, fixed_effects, model_family, data, model_subset_key=NULL) {
+  
+  message(paste0("\n\n\n###--- Starting Analysis: '", analysis_name, "' ---###"))
+  
+  output_dir <- here("Rdata", analysis_name)
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  
+  is_gaussian <- model_family$family == "gaussian"
+  
+  # --- Define Model Specifications based on analysis type ---
+  model_specs <- if (is_gaussian) {
+    tribble(
+      ~name,                      ~mean_random,               ~aux_formula,
+      "m1",            "(1|RING) + (1|YEAR)",      NA, 
+      "m2",       "(1+AGE|RING) + (1|YEAR)",  NA,
+      "m3",      "(1+TIME|RING) + (1|YEAR)", NA,
+      "m4",       "(1|q|RING) + (1|YEAR)",    ~ 1 + (1|q|RING),
+      "m5",      "(1+AGE|q|RING) + (1|YEAR)",    ~ 1 + (1|q|RING),
+      "m6",     "(1+TIME|q|RING) + (1|YEAR)",   ~ 1 + (1|q|RING),
+      "m7",    "(1|q|RING) + (1|YEAR)",    ~ 1 + AGE + TIME + (1|q|RING),
+      "m8",   "(1+AGE|q|RING) + (1|YEAR)",    ~ 1 + AGE + TIME + (1|q|RING),
+      "m9",  "(1+TIME|q|RING) + (1|YEAR)",   ~ 1 + AGE + TIME + (1|q|RING),
+      "m10",      "(1|q|RING) + (1|YEAR)",    ~ 1 + AGE + I(AGE^2) + TIME + (1|q|RING),
+      "m11",     "(1+AGE|q|RING) + (1|YEAR)",    ~ 1 + AGE + I(AGE^2) + TIME + (1|q|RING),
+      "m12",    "(1+TIME|q|RING) + (1|YEAR)",   ~ 1 + AGE + I(AGE^2) + TIME + (1|q|RING)
+    )
+  } else {
+    tribble(
+      ~name,                          ~mean_random,                          ~aux_formula,
+    #LINEAR MISMATCH  
+      "m1",                "(1|RING) + (1|YEAR)",                 ~ 1,
+      "m2",           "(1+AGE|RING) + (1|YEAR)",             ~ 1,
+      "m3",          "(1+TIME|RING) + (1|YEAR)",            ~ 1,
+      "m4",      "(1+ZX5MISMATCH|RING) + (1|YEAR)",     ~ 1,
+      "m5",            "(1|q|RING) + (1|YEAR)",               ~ 1 + (1|q|RING),
+      "m6",           "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + (1|q|RING),
+      "m7",          "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + (1|q|RING),
+      "m8",      "(1+ZX5MISMATCH|q|RING) + (1|YEAR)",   ~ 1 + (1|q|RING),
+      "m9",         "(1|q|RING) + (1|YEAR)",               ~ 1 + ZX5MISMATCH + AGE + TIME + (1|q|RING),
+      "m10",        "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + ZX5MISMATCH + AGE + TIME + (1|q|RING),
+      "m11",       "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + ZX5MISMATCH + AGE + TIME + (1|q|RING),
+      "m12",   "(1+ZX5MISMATCH|q|RING) + (1|YEAR)",   ~ 1 + ZX5MISMATCH + AGE + TIME + (1|q|RING),
+      "m13",           "(1|q|RING) + (1|YEAR)",               ~ 1 + ZX5MISMATCH + AGE + I(AGE^2) + TIME + (1|q|RING),
+      "m14",          "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + ZX5MISMATCH + AGE + I(AGE^2) + TIME + (1|q|RING),
+      "m15",         "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + ZX5MISMATCH + AGE + I(AGE^2) + TIME + (1|q|RING),
+      "m16",     "(1+ZX5MISMATCH|q|RING) + (1|YEAR)",   ~ 1 + ZX5MISMATCH + AGE + I(AGE^2) + TIME + (1|q|RING),
+      
+      
+# QUAD MISMATCH      
+      "Q1",                "(1|RING) + (1|YEAR)",                 ~ 1,
+      "Q2",           "(1+AGE|RING) + (1|YEAR)",             ~ 1,
+      "Q3",          "(1+TIME|RING) + (1|YEAR)",            ~ 1,
+      "Q4",      "(1+ZX5MISMATCH|RING) + (1|YEAR)",     ~ 1,
+      "Q5",            "(1|q|RING) + (1|YEAR)",               ~ 1 + (1|q|RING),
+      "Q6",           "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + (1|q|RING),
+      "Q7",          "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + (1|q|RING),
+      "Q8",      "(1+ZX5MISMATCH|q|RING) + (1|YEAR)",   ~ 1 + (1|q|RING),
+       "Q9",         "(1|q|RING) + (1|YEAR)",               ~ 1 + ZX5MISMATCH + I(ZX5MISMATCH^2) + AGE + TIME + (1|q|RING),
+      "Q10",        "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + ZX5MISMATCH + I(ZX5MISMATCH^2) +AGE + TIME + (1|q|RING),
+      "Q11",       "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + ZX5MISMATCH + I(ZX5MISMATCH^2) +AGE + TIME + (1|q|RING),
+      "Q12",   "(1+ZX5MISMATCH|q|RING) + (1|YEAR)",   ~ 1 + ZX5MISMATCH + I(ZX5MISMATCH^2) +AGE + TIME + (1|q|RING),
+      "Q13",           "(1|q|RING) + (1|YEAR)",               ~ 1 + ZX5MISMATCH + I(ZX5MISMATCH^2) +AGE + I(AGE^2) + TIME + (1|q|RING),
+      "Q14",          "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + ZX5MISMATCH + I(ZX5MISMATCH^2) +AGE + I(AGE^2) + TIME + (1|q|RING),
+      "Q15",         "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + ZX5MISMATCH + I(ZX5MISMATCH^2) +AGE + I(AGE^2) + TIME + (1|q|RING),
+      "Q16",     "(1+ZX5MISMATCH|q|RING) + (1|YEAR)",   ~ 1 + ZX5MISMATCH + I(ZX5MISMATCH^2) +AGE + I(AGE^2) + TIME + (1|q|RING),
+
+
+       "Q17",         "(1|q|RING) + (1|YEAR)",               ~ 1 + ZX5MISMATCH +AGE + TIME + (1|q|RING),
+      "Q18",        "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + ZX5MISMATCH +AGE + TIME + (1|q|RING),
+      "Q19",       "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + ZX5MISMATCH  +AGE + TIME + (1|q|RING),
+      "Q20",   "(1+ZX5MISMATCH|q|RING) + (1|YEAR)",   ~ 1 + ZX5MISMATCH  +AGE + TIME + (1|q|RING),
+      "Q21",           "(1|q|RING) + (1|YEAR)",               ~ 1 + ZX5MISMATCH  +AGE + I(AGE^2) + TIME + (1|q|RING),
+      "Q22",          "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + ZX5MISMATCH  +AGE + I(AGE^2) + TIME + (1|q|RING),
+      "Q23",         "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + ZX5MISMATCH  +AGE + I(AGE^2) + TIME + (1|q|RING),
+      "Q24",     "(1+ZX5MISMATCH|q|RING) + (1|YEAR)",   ~ 1 + ZX5MISMATCH  +AGE + I(AGE^2) + TIME + (1|q|RING),
+      
+      
+      
+      
+#ABS MISMATCH      
+      "ABS1",                "(1|RING) + (1|YEAR)",                 ~ 1,
+      "ABS2",           "(1+AGE|RING) + (1|YEAR)",             ~ 1,
+      "ABS3",          "(1+TIME|RING) + (1|YEAR)",            ~ 1,
+      "ABS4",      "(1+ABSMATCH|RING) + (1|YEAR)",     ~ 1,
+      "ABS5",            "(1|q|RING) + (1|YEAR)",               ~ 1 + (1|q|RING),
+      "ABS6",           "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + (1|q|RING),
+      "ABS7",          "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + (1|q|RING),
+      "ABS8",      "(1+ABSMATCH|q|RING) + (1|YEAR)",   ~ 1 + (1|q|RING),
+       "ABS9",         "(1|q|RING) + (1|YEAR)",               ~ 1 + ABSMATCH + AGE + TIME + (1|q|RING),
+      "ABS10",        "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + ABSMATCH+ AGE + TIME + (1|q|RING),
+      "ABS11",       "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + ABSMATCH + AGE + TIME + (1|q|RING),
+      "ABS12",   "(1+ABSMATCH|q|RING) + (1|YEAR)",   ~ 1 + ABSMATCH+ AGE + TIME + (1|q|RING),
+      "ABS13",           "(1|q|RING) + (1|YEAR)",               ~ 1 + ABSMATCH + AGE + I(AGE^2) + TIME + (1|q|RING),
+      "ABS14",          "(1+AGE|q|RING) + (1|YEAR)",           ~ 1 + ABSMATCH + AGE + I(AGE^2) + TIME + (1|q|RING),
+      "ABS15",         "(1+TIME|q|RING) + (1|YEAR)",          ~ 1 + ABSMATCH + AGE + I(AGE^2) + TIME + (1|q|RING),
+      "ABS16",     "(1+ABSMATCH|q|RING) + (1|YEAR)",   ~ 1 + ABSMATCH+ AGE + I(AGE^2) + TIME + (1|q|RING),
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+    )
+  }
+  
+if (!is.null(model_subset_key)) {
+  message(paste0("Filtering models for subset: '", model_subset_key, "'"))
+  
+  if (model_subset_key == "linear") {
+   # Keep only models that DON'T start with "Q_" or "ABS_"
+   model_specs <- model_specs %>%
+    filter(!grepl("^Q", name) & !grepl("^ABS", name))
+  } else if (model_subset_key == "quad") {
+   # Keep only models that DO start with "Q_"
+   model_specs <- model_specs %>%
+    filter(grepl("^Q", name))
+  } else if (model_subset_key == "abs") {
+   # Keep only models that DO start with "ABS_"
+   model_specs <- model_specs %>%
+    filter(grepl("^ABS", name))
+  }
+  
+  # Safety check
+  if (nrow(model_specs) == 0) {
+   warning(paste0("No models found for subset key: '", model_subset_key, "'. Check your model names and key."))
+   return(invisible(NULL)) # Stop if no models to run
+  }
+ }
+  
+  
+  # --- Internal function to fit a single model ---
+  fit_and_save_model <- function(name, mean_random, aux_formula, ...) {
+    model_path <- file.path(output_dir, paste0("female_fit_", name, ".rds"))
+    loo_path <- file.path(output_dir, paste0("female_loo_", name, ".rds"))
+    
+    if (file.exists(model_path)) {
+      message(paste0("Skipping '", name, "': Model file already exists."))
+      return(invisible(NULL))
+    }
+    
+    message(paste0("\n--- Fitting model: ", name, " ---"))
+    
+    formula_str <- paste(response_var, "~", fixed_effects, "+", mean_random)
+    
+    # --- CORRECTED LOGIC ---
+    # Use inherits() for a robust check if aux_formula is a real formula or NA.
+    brm_formula <- if (!inherits(aux_formula, "formula")) {
+      bf(formula_str, nl = FALSE)
+    } else if (is_gaussian) {
+      bf(formula_str, sigma = aux_formula, nl = FALSE)
+    } else {
+      bf(formula_str, disc = aux_formula, nl = FALSE)
+    }
+    
+    model_priors <- get_prior(brm_formula, data = data, family = model_family)
+    
+    fit <- tryCatch({
+      brm(
+        formula = brm_formula, data = data, prior = model_priors, family = model_family,
+        iter = 6000, warmup = 2000, chains = 4, seed = 123, init = 0,backend = "cmdstanr",threads = threading(12),
+        control = list(adapt_delta = 0.99, max_treedepth = 15)
+      )
+    }, error = function(e) { message(paste0("ERROR fitting '", name, "': ", e$message)); NULL })
+    
+    if (!is.null(fit)) {
+      saveRDS(fit, model_path)
+      loo_result <- tryCatch(loo(fit), error = function(e) { message(paste0("ERROR with LOO: ", e$message)); NULL })
+      if (!is.null(loo_result)) saveRDS(loo_result, loo_path)
+    }
+  }
+  
+  # --- Run all models and compare LOO results ---
+  pwalk(model_specs, fit_and_save_model)
+  
+
+}
+```
+:::
+
+# Executing the workflow for all analyses
+
+The workflow was run independently for males and females for the following analyses:
+
+-   Phenological mismatch: Modeled as a Gaussian response (`X5MISMATCH`).
+
+-   Fledgling success: Modeled as an ordinal response (`FLEDS`).
+
+Each set of candidate models was fitted and stored for subsequent model comparison.
+
+::::: panel-tabset
+## Analyses for males
+
+The workflow is first executed using the pre-processed male dataset (dat0).
+
+::: panel-tabset
+## Phenological mismatch Analysis
+
+This analysis models the continuous phenological mismatch (`X5MISMATCH`) as the response variable. A Gaussian model family is specified, which is appropriate for a normally distributed outcome
+
+```{r}
+#| label: Execute pheno males
+#| eval: false
+run_analysis_workflow(
+  analysis_name = "pheno_mismatch",
+  response_var = "X5MISMATCH",
+  fixed_effects = FIXED_EFFECTS_GAUSSIAN,
+  model_family = gaussian(),
+  data = dat0
+)
+```
+
+## Number of fledglings Analysis
+
+Here, the response variable is the number of fledglings (`FLEDS`) is an ordered categorical outcome (0, 1, 2, or 3 fledglings. For these type of models, the specified family used is `cumulative(link = "probit")`.
+
+```{r}
+#| label: Execute fleds males
+#| eval: false
+run_analysis_workflow(
+  analysis_name = "fleds_full",
+  response_var = "FLEDS",
+  fixed_effects = FIXED_EFFECTS_ORDINAL_FULL,
+  model_family = cumulative(link = "probit"),
+  data = dat0,
+  model_subset_key = "linear"
+)
+
+run_analysis_workflow(
+ analysis_name = "fleds_full",
+ response_var = "FLEDS",
+ fixed_effects = FIXED_EFFECTS_ORDINAL_QUADMATCH,
+ model_family = cumulative(link = "probit"),
+ data = dat0,
+ model_subset_key = "quad" 
+)
+
+run_analysis_workflow(
+ analysis_name = "fleds_full",
+ response_var = "FLEDS",
+ fixed_effects = FIXED_EFFECTS_ORDINAL_ABSMATCH ,
+ model_family = cumulative(link = "probit"),
+ data = dat0,
+ model_subset_key = "abs" 
+)
+```
+:::
+
+## Analyses for females
+
+The entire workflow is then repeated for the female dataset (dat1). The function calls are identical in structure, differing only in the data
+
+::: panel-tabset
+## Phenological mismatch Analysis
+
+```{r}
+#| label: Execute pheno females
+#| eval: false
+run_analysis_workflow(
+  analysis_name = "pheno_mismatch",
+  response_var = "X5MISMATCH",
+  fixed_effects = FIXED_EFFECTS_GAUSSIAN,
+  model_family = gaussian(),
+  data = dat
+)
+```
+
+## Number of fledglings Analysis
+
+```{r}
+#| label: Execute fleds females
+#| eval: false
+run_analysis_workflow(
+  analysis_name = "fleds_full",
+  response_var = "FLEDS",
+  fixed_effects = FIXED_EFFECTS_ORDINAL_FULL,
+  model_family = cumulative(link = "probit"),
+  data = dat,
+  model_subset_key = "linear"
+)
+
+run_analysis_workflow(
+ analysis_name = "fleds_full",
+ response_var = "FLEDS",
+ fixed_effects = FIXED_EFFECTS_ORDINAL_QUADMATCH,
+ model_family = cumulative(link = "probit"),
+ data = dat,
+ model_subset_key = "quad" 
+)
+
+run_analysis_workflow(
+ analysis_name = "fleds_full",
+ response_var = "FLEDS",
+ fixed_effects = FIXED_EFFECTS_ORDINAL_ABSMATCH ,
+ model_family = cumulative(link = "probit"),
+ data = dat,
+ model_subset_key = "abs" 
+)
+
+```
+:::
+:::::
+
+# Stop parallel processing
+
+After all computationally intensive model-fitting tasks are complete, it is good practice to shut down the parallel processing backend. The following command returns the R session to its default sequential mode, releasing the extra CPU cores that were allocated for the analysis.
+
+```{r}
+plan(sequential)
+```
+
+::: {.callout-tip appearance="simple" icon="false"}
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+utils::sessionInfo()
+```
+:::

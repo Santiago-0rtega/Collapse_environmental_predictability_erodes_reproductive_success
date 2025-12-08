@@ -1,0 +1,329 @@
+---
+title: "7. Figures: Phenological mismatch"
+---
+
+This section visualizes the results of the best-supported Gaussian models for phenological mismatch. The figures illustrate the predicted effects of age and time (year) on both the average phenological mismatch (the location) and its individual-level variability (the scale, or sigma).
+
+```{r}
+#| label: setup-pheno_results
+#| include: true
+pacman::p_load(MASS, 
+               dplyr,
+               ggplot2,broom.mixed,
+               here,ggdist,patchwork,
+               arm,
+               tidyverse,
+               tidybayes,
+               brms,
+               rstan,
+               emmeans,
+               ggthemes,
+               bayesplot ,cmdstanr, extrafont, ggtext)
+```
+
+# Data preparation
+
+The primary dataset is loaded and preprocessed for both sexes.
+
+```{r}
+#| label: load-data
+#| eval: false
+# --- Load and preprocess male data ---
+dat_male <- read.csv(here("data", "Lay_date_mismatches_250702.csv")) %>% subset(SEX == 0)
+
+dat_male <- dat_male %>%
+  mutate(
+   X5MISMATCH=as.numeric(X5MISMATCH),
+   AGE= as.numeric(AGE),
+   ori=AGE,
+   ori_time=as.numeric(YEAR),
+   ori_afr=as.numeric(AFR),
+   ori_longevity=as.numeric(LONGEVITY),
+   AGE = scale(AGE, center = T, scale = F),
+   TIME= scale(YEAR, center = T, scale = F),
+   AFR=as.numeric(AFR), AFR=scale(AFR,center=T,scale=F),
+   LONGEVITY=as.numeric(LONGEVITY),
+   LONGEVITY=scale(LONGEVITY,center=T,scale = F),
+   YEAR = as.factor(YEAR),
+   RING=as.factor(RING),
+   FLEDS=factor(FLEDS,levels=c(0,1,2,3),ordered = T)
+  )
+
+# --- Load and preprocess female data ---
+dat_female <- read.csv(here("data", "Lay_date_mismatches_250702.csv")) %>% subset(SEX == 1)
+
+dat_female <- dat_female %>%
+  mutate(
+   X5MISMATCH=as.numeric(X5MISMATCH),
+   AGE= as.numeric(AGE),
+   ori=AGE,
+   ori_time=as.numeric(YEAR),
+   AGE = scale(AGE, center = T, scale = F),
+   TIME= scale(YEAR, center = T, scale = F),
+   AFR=as.numeric(AFR), AFR=scale(AFR,center=T,scale=F),
+   LONGEVITY=as.numeric(LONGEVITY),
+   LONGEVITY=scale(LONGEVITY,center=T,scale = F),
+   YEAR = as.factor(YEAR),
+   RING=as.factor(RING),
+   FLEDS=factor(FLEDS,levels=c(0,1,2,3),ordered = T)
+  )
+```
+
+# Model loading
+
+```{r}
+#| label: load-models pheno
+#| eval: false
+# --- Load the pre-fitted models and predictions ---
+m3_male <- readRDS(here("Rdata", "male_fit_age_slope_sigma_linear.rds"))
+m3_female <- readRDS(here("Rdata", "female_fit_age_slope_sigma_linear.rds"))
+```
+
+Instead of re-fitting the computationally expensive models, this code loads the final, saved brms model objects from their .rds files. These loaded objects (`m3_male` and `m3_female`) contain all the information from the model's posterior distribution and are now ready to be used for generating summaries and visualizations.
+
+# Generating Predictions
+
+Posterior predictions are generated from the fitted models. This includes predictions for both the population-level trends and individual-level trajectories. The data is also summarized to create counts for the bubble plots.
+
+::: panel-tabset
+## Males
+
+```{r}
+#| label: generate-predictions-pheno
+#| eval: false
+
+# --- Generate predictions for MALES ---
+mean_of_original_age_male <- mean(dat_male$ori)
+mean_of_original_time_male <- mean(dat_male$ori_time)
+num_to_sample <- 20
+set.seed(42)
+rings_to_plot_male <- sample(unique(dat_male$RING), num_to_sample)
+newdata_grid_male <- expand.grid(AGE = seq(min(dat_male$AGE), max(dat_male$AGE), length.out = 50),
+                                 RING = rings_to_plot_male, TIME = mean(dat_male$TIME),
+                                 AFR = mean(dat_male$AFR), LONGEVITY = mean(dat_male$LONGEVITY))
+individual_predictions_male <- m3_male %>% add_linpred_draws(newdata = newdata_grid_male, re_formula = ~(1 + AGE | RING)) %>%
+  group_by(RING, AGE) %>% summarise(.value = median(.linpred), .groups = "drop") %>%
+  mutate(actual_age = AGE + mean_of_original_age_male)
+pop_level_draws_male <- m3_male %>% epred_draws(newdata = newdata_grid_male, re_formula = NA) %>%
+  mutate(actual_age = AGE + mean_of_original_age_male)
+age_draws_male <- m3_male %>% epred_draws(newdata = data.frame(AGE = seq(min(dat_male$AGE), max(dat_male$AGE), length.out = 50),
+                                                               TIME = mean(dat_male$TIME), AFR = mean(dat_male$AFR),
+                                                               LONGEVITY = mean(dat_male$LONGEVITY),
+                                                               RING = factor(levels(dat_male$RING)[1]),
+                                                               YEAR = factor(levels(dat_male$YEAR)[1])),
+                                          re_formula = NA, bias_correction = TRUE, dpar = TRUE) %>%
+  mutate(actual_age = AGE + mean_of_original_age_male)
+time_draws_male <- m3_male %>% epred_draws(newdata = data.frame(TIME = seq(min(dat_male$TIME), max(dat_male$TIME), length.out = 50),
+                                                                AGE = mean(dat_male$AGE), AFR = mean(dat_male$AFR),
+                                                                LONGEVITY = mean(dat_male$LONGEVITY),
+                                                                RING = factor(levels(dat_male$RING)[1]),
+                                                                YEAR = factor(levels(dat_male$YEAR)[1])),
+                                           re_formula = NA, bias_correction = TRUE, dpar = TRUE) %>%
+  mutate(actual_time = TIME + mean_of_original_time_male)
+
+
+
+```
+
+## Females
+
+```{r}
+#| eval: false
+# --- Generate predictions for FEMALES ---
+mean_of_original_age_female <- mean(dat_female$ori)
+mean_of_original_time_female <- mean(dat_female$ori_time)
+rings_to_plot_female <- sample(unique(dat_female$RING), num_to_sample)
+newdata_grid_female <- expand.grid(AGE = seq(min(dat_female$AGE), max(dat_female$AGE), length.out = 50),
+                                   RING = rings_to_plot_female, TIME = mean(dat_female$TIME),
+                                   AFR = mean(dat_female$AFR), LONGEVITY = mean(dat_female$LONGEVITY))
+individual_predictions_female <- m3_female %>% add_linpred_draws(newdata = newdata_grid_female, re_formula = ~(1 + AGE | RING)) %>%
+  group_by(RING, AGE) %>% summarise(.value = median(.linpred), .groups = "drop") %>%
+  mutate(actual_age = AGE + mean_of_original_age_female)
+pop_level_draws_female <- m3_female %>% epred_draws(newdata = newdata_grid_female, re_formula = NA) %>%
+  mutate(actual_age = AGE + mean_of_original_age_female)
+age_draws_female <- m3_female %>% epred_draws(newdata = data.frame(AGE = seq(min(dat_female$AGE), max(dat_female$AGE), length.out = 50),
+                                                                 TIME = mean(dat_female$TIME), AFR = mean(dat_female$AFR),
+                                                                 LONGEVITY = mean(dat_female$LONGEVITY),
+                                                                 RING = factor(levels(dat_female$RING)[1]),
+                                                                 YEAR = factor(levels(dat_female$YEAR)[1])),
+                                            re_formula = NA, bias_correction = TRUE, dpar = TRUE) %>%
+  mutate(actual_age = AGE + mean_of_original_age_female)
+time_draws_female <- m3_female %>% epred_draws(newdata = data.frame(TIME = seq(min(dat_female$TIME), max(dat_female$TIME), length.out = 50),
+                                                                  AGE = mean(dat_female$AGE), AFR = mean(dat_female$AFR),
+                                                                  LONGEVITY = mean(dat_female$LONGEVITY),
+                                                                  RING = factor(levels(dat_female$RING)[1]),
+                                                                  YEAR = factor(levels(dat_female$YEAR)[1])),
+                                             re_formula = NA, bias_correction = TRUE, dpar = TRUE) %>%
+  mutate(actual_time = TIME + mean_of_original_time_female)
+
+
+```
+
+## Data summarization for bubble plots
+
+```{r}
+#| eval: false
+# --- Calculate residuals and counts for bubble plots ---
+model_residuals_male <- residuals(m3_male, summary = TRUE)[, "Estimate"]
+dat_with_residuals_male <- dat_male %>% mutate(residual = model_residuals_male, raw_sigma = sqrt(residual^2))
+model_residuals_female <- residuals(m3_female, summary = TRUE)[, "Estimate"]
+dat_with_residuals_female <- dat_female %>% mutate(residual = model_residuals_female, raw_sigma = sqrt(residual^2))
+dat_count_mismatch_age_male <- dat_male %>% group_by(ori, X5MISMATCH) %>% summarize(n = n(), .groups = 'drop')
+dat_count_mismatch_age_female <- dat_female %>% group_by(ori, X5MISMATCH) %>% summarize(n = n(), .groups = 'drop')
+dat_count_sigma_age_male <- dat_with_residuals_male %>% group_by(ori, raw_sigma) %>% summarize(n = n(), .groups = 'drop')
+dat_count_sigma_age_female <- dat_with_residuals_female %>% group_by(ori, raw_sigma) %>% summarize(n = n(), .groups = 'drop')
+dat_count_mismatch_year_male <- dat_male %>% group_by(ori_time, X5MISMATCH) %>% summarize(n = n(), .groups = 'drop')
+dat_count_mismatch_year_female <- dat_female %>% group_by(ori_time, X5MISMATCH) %>% summarize(n = n(), .groups = 'drop')
+dat_count_sigma_year_male <- dat_with_residuals_male %>% group_by(ori_time, raw_sigma) %>% summarize(n = n(), .groups = 'drop')
+dat_count_sigma_year_female <- dat_with_residuals_female %>% group_by(ori_time, raw_sigma) %>% summarize(n = n(), .groups = 'drop')
+```
+:::
+
+# Plotting
+
+A custom ggplot2 theme is defined for consistency. The plots are then created and combined into final figures using patchwork.
+
+Plotting Theme
+
+```{r}
+#| label: theme-setup-pheno
+#| eval: false
+
+# Custom theme based on theme_economist_white for a clean, consistent look.
+custom_theme <- function() {
+  theme_economist_white(gray_bg = FALSE, base_size = 12) +
+    theme(
+      legend.position = "none",
+      panel.background = element_rect(fill = 'transparent', colour = NA),
+      plot.background = element_rect(fill = 'transparent', colour = NA),
+      text = element_text(family = "Arial"),
+      axis.title.x = element_text(margin = margin(t = 10)),
+      axis.title.y = element_text(margin = margin(r = 10)),
+      axis.text.x = element_text(margin = margin(t = 2)),
+      axis.text.y = element_text(hjust = 1, margin = margin(r = 5)),
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 16, margin = margin(b = 12)),
+      plot.subtitle = element_text(hjust = 0.5, size = 10, margin = margin(b = 10)),
+      panel.grid.major = element_line(color = "grey90"),
+      axis.line = element_line(color = "black"),
+      axis.ticks = element_line(color = "black")
+    )
+}
+```
+
+## Figure: Age Effects
+
+This figure visualizes the effect of age on the phenological mismatch (top row) and its heterogeneity (sigma, bottom row).
+
+```{r}
+#| label: age-figure-pheno
+#| eval: false
+
+# --- Create individual plots ---
+# Mismatch vs. Age: Female
+plot_mismatch_age_female <- ggplot() +
+  geom_point(data = dat_count_mismatch_age_female, aes(x = ori, y = X5MISMATCH, size = n), shape = 21, alpha = 0.2, color = "#696969", fill = "#C0C0C0") +
+  stat_lineribbon(data = pop_level_draws_female, aes(x = actual_age, y = .epred), .width = 0.95, alpha = 0.4, fill = "#4A90E2") +
+  geom_line(data = individual_predictions_female, aes(x = actual_age, y = .value, group = RING), color = "#D95F02", linewidth = 0.7, alpha = 0.6) +
+  stat_lineribbon(data = pop_level_draws_female, aes(x = actual_age, y = .epred), fill = NA, color = "black", linewidth = 1.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "aquamarine4") +
+  labs(title = "Females (n = 2581)", subtitle = "Phenological mismatch (days)", y = "", x = "Age (years)") +
+  custom_theme()
+
+# Mismatch vs. Age: Male
+plot_mismatch_age_male <- ggplot() +
+  geom_point(data = dat_count_mismatch_age_male, aes(x = ori, y = X5MISMATCH, size = n), shape = 21, alpha = 0.2, color = "#696969", fill = "#C0C0C0") +
+  stat_lineribbon(data = pop_level_draws_male, aes(x = actual_age, y = .epred), .width = 0.95, alpha = 0.4, fill = "#4A90E2") +
+  geom_line(data = individual_predictions_male, aes(x = actual_age, y = .value, group = RING), color = "#D95F02", linewidth = 0.7, alpha = 0.6) +
+  stat_lineribbon(data = pop_level_draws_male, aes(x = actual_age, y = .epred), fill = NA, color = "black", linewidth = 1.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "aquamarine4") +
+  labs(title = "Males (n = 2910)", subtitle = "Phenological mismatch (days)", y = "", x = "Age (years)") +
+  custom_theme()
+
+# Sigma vs. Age: Female
+plot_sigma_age_female <- ggplot() +
+  geom_point(data = dat_count_sigma_age_female, aes(x = ori, y = raw_sigma, size = n), shape = 21, alpha = 0.2, color = "#696969", fill = "#C0C0C0") +
+  stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = sigma), .width = 0.95, alpha = 0.4, fill = "#D95F02") +
+  stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = sigma), fill = NA, color = "black", linewidth = 1.5) +
+  labs(subtitle = "Heterogeneity (σ)", y = "", x = "Age (years)") +
+  custom_theme()
+
+# Sigma vs. Age: Male
+plot_sigma_age_male <- ggplot() +
+  geom_point(data = dat_count_sigma_age_male, aes(x = ori, y = raw_sigma, size = n), shape = 21, alpha = 0.2, color = "#696969", fill = "#C0C0C0") +
+  stat_lineribbon(data = age_draws_male, aes(x = actual_age, y = sigma), .width = 0.95, alpha = 0.4, fill = "#D95F02") +
+  stat_lineribbon(data = age_draws_male, aes(x = actual_age, y = sigma), fill = NA, color = "black", linewidth = 1.5) +
+  labs(subtitle = "Heterogeneity (σ)", y = "", x = "Age (years)") +
+  custom_theme()
+
+# --- Combine and Save Figure ---
+age_figure_pheno <- (plot_mismatch_age_female | plot_mismatch_age_male) / (plot_sigma_age_female | plot_sigma_age_male) +
+  plot_annotation(tag_levels = 'A')
+
+ggsave(filename = here("Plots", "PHENO_MISMATCH_AGE.pdf"),
+       plot = age_figure_pheno, width = 20, height = 15,
+       units = "cm", dpi = 300, device = cairo_pdf)
+
+```
+
+![Age effects on phenological mismatch and its predictability in female (A, C) and male (B, D) blue-footed boobies. Panels A–B show mismatch in days relative to the chlorophyll-a bloom; panels C–D show the residual standard deviation (σ), with higher values indicating lower predictability. Grey points are individual observations, black lines population-level predictions (95% CI shaded). Orange lines trace trajectories of 20 random birds. The dotted aquamarine line marks zero mismatch.](Plots/PHENO_MISMATCH_AGE.png){#fig-mismatch-age}
+
+## Figure: Time Effect
+
+This figure visualizes the effect of year on the phenological mismatch (top row) and its heterogeneity (sigma, bottom row).
+
+```{r}
+#| label: time-figure-pheno
+#| eval: false
+
+# --- Create individual plots ---
+# Mismatch vs. Time: Female
+plot_mismatch_time_female <- ggplot() +
+  geom_point(data = dat_count_mismatch_year_female, aes(x = ori_time, y = X5MISMATCH, size = n), shape = 21, alpha = 0.2, color = "#696969", fill = "#C0C0C0") +
+  stat_lineribbon(data = time_draws_female, aes(x = actual_time, y = .epred), .width = 0.95, alpha = 0.4, fill = "#4A90E2") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "aquamarine4") +
+  labs(title = "Females (n = 2581)", subtitle = "Phenological mismatch (days)", y = "", x = "Year") +
+  custom_theme()
+
+# Mismatch vs. Time: Male
+plot_mismatch_time_male <- ggplot() +
+  geom_point(data = dat_count_mismatch_year_male, aes(x = ori_time, y = X5MISMATCH, size = n), shape = 21, alpha = 0.2, color = "#696969", fill = "#C0C0C0") +
+  stat_lineribbon(data = time_draws_male, aes(x = actual_time, y = .epred), .width = 0.95, alpha = 0.4, fill = "#4A90E2") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "aquamarine4") +
+  labs(title = "Males (n = 2910)", subtitle = "Phenological mismatch (days)", y = "", x = "Year") +
+  custom_theme()
+
+# Sigma vs. Time: Female
+plot_sigma_time_female <- ggplot() +
+  geom_point(data = dat_count_sigma_year_female, aes(x = ori_time, y = raw_sigma, size = n), shape = 21, alpha = 0.2, color = "#696969", fill = "#C0C0C0") +
+  stat_lineribbon(data = time_draws_female, aes(x = actual_time, y = sigma), .width = 0.95, alpha = 0.4, fill = "#D95F02") +
+  stat_lineribbon(data = time_draws_female, aes(x = actual_time, y = sigma), fill = NA, color = "black", linewidth = 1.5) +
+  labs(subtitle = "Heterogeneity (σ)", y = "", x = "Year") +
+  custom_theme()
+
+# Sigma vs. Time: Male
+plot_sigma_time_male <- ggplot() +
+  geom_point(data = dat_count_sigma_year_male, aes(x = ori_time, y = raw_sigma, size = n), shape = 21, alpha = 0.2, color = "#696969", fill = "#C0C0C0") +
+  stat_lineribbon(data = time_draws_male, aes(x = actual_time, y = sigma), .width = 0.95, alpha = 0.4, fill = "#D95F02") +
+  stat_lineribbon(data = time_draws_male, aes(x = actual_time, y = sigma), fill = NA, color = "black", linewidth = 1.5) +
+  labs(subtitle = "Heterogeneity (σ)", y = "", x = "Year") +
+  custom_theme()
+
+# --- Combine and Save Figure ---
+time_figure_pheno <- (plot_mismatch_time_female | plot_mismatch_time_male) / (plot_sigma_time_female | plot_sigma_time_male) +
+  plot_annotation(tag_levels = 'A')
+
+ggsave(filename = here("Plots", "PHENO_MISMATCH_TIME.pdf"),
+       plot = time_figure_pheno, width = 20, height = 15,
+       units = "cm", dpi = 300, device = cairo_pdf)
+```
+
+![Temporal trends in phenological mismatch and predictability (2003–2023). Panels A–B show mismatch relative to the chlorophyll-a bloom; panels C–D show residual standard deviation (σ). Grey points are individual observations, black lines population-level trends (95% CI shaded).](Plots/PHENO_MISMATCH_TIME.jpg){#fig-mismatch-time}
+
+::: {.callout-tip appearance="simple" icon="false"}
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+utils::sessionInfo()
+```
+:::

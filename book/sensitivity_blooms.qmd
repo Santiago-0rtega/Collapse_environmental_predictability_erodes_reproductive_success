@@ -1,0 +1,173 @@
+---
+title: "S9. Sensitivity analyses: Bloom onset thresholds"
+unnumbered: true
+---
+
+```{r}
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(
+    brms, dplyr, here, future, purrr, furrr,cmdstanr,tibble, stringr
+)
+```
+
+# Threshold summaries
+
+::: panel-tabset
+## 5% Threshold
+
+```{r}
+#| label: summary-5pct
+#| eval: true
+summary(readRDS(here("Rdata","model_value_at_bloom_thr5.rds")))
+```
+
+## 15% Threshold
+
+```{r}
+#| label: summary-15pct
+#| eval: true
+summary(readRDS(here("Rdata","model_value_at_bloom_thr15.rds")))
+```
+
+## 25% Threshold
+
+```{r}
+#| label: summary-25pct
+#| eval: true
+summary(readRDS(here("Rdata","model_value_at_bloom_thr25.rds")))
+```
+:::
+
+# Model fitting
+
+```{r}
+#| label: setup
+#| eval: false
+# --- Parallel Processing Setup ---
+options(mc.cores = parallel::detectCores(), brms.backend = "cmdstanr")
+plan(multisession, workers=4) 
+```
+
+## Calculate Days Since Winter Solstice
+
+```{r}
+#| label: data-transformation
+#| eval: false
+dat<-read.csv(here("data","bloom_dates.csv"))
+dat <- dat %>%
+  mutate(
+    # --- Date Calculations ---
+    # To calculate the days from winter, we first need to convert the date strings
+    # into actual Date objects that R can understand.
+    bloom_start_thr5_as_date = as.Date(bloom_start_thr5, format = "%d/%m/%Y"),
+    bloom_start_thr15_as_date = as.Date(bloom_start_thr15, format = "%d/%m/%Y"),
+    bloom_start_thr25_as_date = as.Date(bloom_start_thr25, format = "%d/%m/%Y"),
+    
+    # We define the winter solstice as Dec 21 of the year before the season starts.
+    winter_start_date = as.Date(paste0(season_year - 1, "-12-21")),
+    
+    # Now we can calculate the difference in days, creating the new 'delta' columns.
+    # This is the most logical interpretation of making the date columns "numeric".
+    delta5 = as.numeric(
+        difftime(bloom_start_thr5_as_date, winter_start_date, units = "days")
+    ),
+    delta15 = as.numeric(
+        difftime(bloom_start_thr15_as_date, winter_start_date, units = "days")
+    ),
+    delta25 = as.numeric(
+        difftime(bloom_start_thr25_as_date, winter_start_date, units = "days")
+    ),
+
+    # --- Type Conversions and Renaming ---
+    # Here we convert season_year to a factor and rename it to TIME.
+    TIME = as.factor(season_year),
+    
+    # And we ensure the various 'value_at_bloom' columns are numeric.
+    value5 = as.numeric(value_at_bloom_thr5),
+    value15 = as.numeric(value_at_bloom_thr15),
+    value25 = as.numeric(value_at_bloom_thr25)
+  ) %>%
+  # To keep the data frame clean, we remove the original columns that have been
+  # transformed and the intermediate helper columns used for the calculation.
+  select( -starts_with("bloom_start_thr"), -winter_start_date)
+```
+
+## Fit Location-Scale Models
+
+```{r}
+#| label: fit-location-scale-models
+#| eval: false
+run_location_scale_models <- function(response_vars, data) {
+  if (!dir.exists(here("Rdata"))) {
+    dir.create(here("Rdata"))
+  }
+  
+  # Use purrr::walk to iterate through each response variable and fit a model.
+  purrr::walk(response_vars, function(var) {
+    
+    # Define the model formula. We model both the mean (mu) and the standard
+    # deviation (sigma) as a function of TIME.
+    model_formula <- bf(
+      as.formula(paste(var, "~ 1 + TIME")),
+      sigma ~ 1 + TIME
+    )
+    
+    # Define the output file path for the saved model object.
+    file_path <- here("Rdata", paste0("model_", var, ".rds"))
+    
+    # Define the model family.
+    model_family <- gaussian()
+    
+    # Get the default priors for the specified model formula and data.
+    model_priors <- get_prior(model_formula, data = data, family = model_family)
+    
+    # Use tryCatch to gracefully handle any potential errors during model fitting.
+    fit <- tryCatch({
+      brm(
+        formula = model_formula,
+        data = data,
+        prior = model_priors,
+        family = model_family,
+        iter = 6000,
+        warmup = 2000,
+        chains = 4,
+        seed = 123,
+        init = 0,
+        control = list(adapt_delta = 0.99, max_treedepth = 15),
+        file = file_path,
+        file_refit = "on_change"
+      )
+    }, error = function(e) {
+      # If an error occurs, print a message and return NULL.
+      cat("Error fitting model for:", var, "\n")
+      cat("Error message:", e$message, "\n")
+      return(NULL)
+    })
+    
+    # Only print the success message if the model fitting was successful.
+    if (!is.null(fit)) {
+      cat("Saved model for:", var, "to", file_path, "\n")
+    }
+  })
+}
+```
+
+```{r}
+#| label: run-models
+#| eval: false
+# --- Run Analysis for Delta Variables ---
+# Define the list of delta response variables.
+delta_vars <- c("delta5", "delta15", "delta25")
+# Run the models for the delta variables.
+run_location_scale_models(response_vars = delta_vars, data = dat)
+```
+
+::: {.callout-tip appearance="simple" icon="false"}
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+utils::sessionInfo()
+```
+:::

@@ -1,0 +1,13 @@
+﻿Model,Location effects,Random effects
+m1,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1|ID) + (1|Year),NA
+m2,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Age|ID) + (1|Year),NA
+m3,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Time|ID) + (1|Year),NA
+m4,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + (1|q|ID)
+m5,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + (1|q|ID)
+m6,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + (1|q|ID)
+m7,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1|ID) + (1|Year),1 + Age + Time + (1|q|ID)
+m8,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Age|ID) + (1|Year),1 + Age + Time + (1|q|ID)
+m9,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Time|ID) + (1|Year),1 + Age + Time + (1|q|ID)
+m10,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1|q|ID) + (1|Year),1 + Age +  I(Age^2) + Time + (1|q|ID)
+m11,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Age|q|ID) + (1|Year),1 + Age +  I(Age^2) + Time + (1|q|ID)
+m12,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Time|q|ID) + (1|Year),1 + Age +  I(Age^2) + Time + (1|q|ID)

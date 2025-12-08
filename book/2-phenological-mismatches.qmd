@@ -1,0 +1,164 @@
+---
+title: "S2. Phenological mismatches"
+---
+
+```{r}
+#| label: setup-pheno-mismatch
+#| include: false
+
+# For data manipulation and plotting (loads ggplot2, dplyr, tidyr, etc.)
+library(tidyverse)
+
+# For file path management
+library(here)
+```
+
+This section examines phenological mismatches, defined as the temporal difference between breeding events and the onset of phytoplankton blooms.
+
+## Data preparation
+
+Data on phenological mismatches were compiled and prepared for visualization. The dataset includes mismatches calculated separately for males and females, across bloom detection thresholds of 5%, 15%, and 25%, and for two seasonal windows (Winter–Spring and Autumn–Spring).
+
+The data were restructured for plotting in `ggplot2`, producing a combined dataset used to generate density plots. These plots are faceted by sex and season, and color-coded by threshold level.
+
+## Mismatch visualization
+
+Phenological mismatches were visualized as density distributions. Each panel corresponds to a combination of sex (females or males) and seasonal window (Winter–Spring or Autumn–Spring), with distributions compared across thresholds (5%, 15%, and 25%).
+
+```{r}
+#| label: Plot pheno mismatch
+#| code-fold: true
+dat <- read.csv(here::here("data", "Lay_date_mismatches_250702.csv"))
+
+
+# 1. Prepare 'Winter to Spring' data
+data_A <- dat %>%
+  select(SEX, X5MISMATCH, X15MISMATCH, X25MISMATCH) %>%
+  rename(
+    `5% threshold` = `X5MISMATCH`,
+    `15% threshold` = `X15MISMATCH`,
+    `25% threshold` = `X25MISMATCH`
+  ) %>%
+  pivot_longer(
+    cols = -SEX,
+    names_to = "Mismatch_Type",
+    values_to = "Value"
+  ) %>%
+  mutate(Season = "Winter to Spring")
+
+# 2. Prepare 'Autumn to Spring' data
+data_B <- dat %>%
+  select(SEX, X5MISMATCHB, X15MISMATCHB) %>%
+  rename(
+    `5% threshold` = `X5MISMATCHB`,
+    `15% threshold` = `X15MISMATCHB`
+  ) %>%
+  pivot_longer(
+    cols = -SEX,
+    names_to = "Mismatch_Type",
+    values_to = "Value"
+  ) %>%
+  mutate(Season = "Autumn to Spring")
+
+
+combined_data <- bind_rows(data_A, data_B) %>%
+  mutate(
+
+    Sex_Label = factor(if_else(SEX == 0, "Males", "Females"), levels = c("Females", "Males")),
+
+    Season = factor(Season, levels = c("Winter to Spring", "Autumn to Spring")),
+
+    Mismatch_Type = factor(Mismatch_Type, levels = c("5% threshold", "15% threshold", "25% threshold"))
+  ) %>%
+
+  filter(!is.na(Value))
+
+
+
+```
+
+```{r}
+# --- NEW 2-COLOR PALETTE ---
+season_palette <- c(
+  "Winter to Spring" = "#0072B2", # Blue
+  "Autumn to Spring" = "#DAA520"  # Gold (Goldenrod)
+)
+
+# --- MODIFIED PLOT CODE ---
+
+# Map fill and color to 'Season'
+mismatch_plot <- ggplot(combined_data, aes(x = Value, 
+                                          fill = Season, 
+                                          color = Season)) +
+  
+  geom_area(
+    stat = "bin",
+    binwidth = 1,
+    position = "identity",
+    alpha = 0.5, # Alpha is critical for seeing the overlap
+    linewidth = 0
+  ) +
+  
+  # Faceting remains the same (3 rows, 2 cols)
+ facet_grid(Mismatch_Type ~ Sex_Label) +
+  
+ labs(
+  title = "",
+  x = "Phenological mismatch (days)",
+  y = "Count"
+ ) +
+  
+  # --- Use the new 2-color palette ---
+ scale_fill_manual(
+    name = "Season", 
+    values = season_palette, 
+    drop = FALSE
+  ) +
+  scale_color_manual(
+    name = "Season", 
+    values = season_palette, 
+    drop = FALSE
+  ) +
+  
+ theme_light() +
+ 
+ scale_x_continuous(limits = c(-150, 250), breaks = seq(-150, 250, 50)) +
+ 
+  theme(
+  legend.position = "right",
+    strip.text = element_text(face = "bold")
+  )
+
+print(mismatch_plot)
+```
+
+```{r}
+ggsave(filename = here("Plots", "mismatch_thresholds.pdf"),
+       plot = mismatch_plot,
+       dpi = 300, device = cairo_pdf)
+
+ggsave(filename = here("Plots", "mismatch_thresholds.jpg"),
+       plot = mismatch_plot,
+       width = 9,  
+       height = 7,  
+       dpi = 300)
+```
+
+## Interpretation of mismatch figure
+
+-   The density plots reveal a consistent bimodal distribution across sexes, thresholds, and seasonal windows.
+
+-   Primary mode: Centered at approximately 0 days, indicating synchrony between breeding and bloom onset.
+
+-   Secondary mode: A smaller peak around +100 days, reflecting cases where breeding occurs long after bloom initiation.
+
+-   Sex and season effects: The distributions are highly similar between males and females and across seasonal windows, suggesting that mismatch estimates are robust to sex-specific or seasonal definitions.
+
+::: {.callout-tip appearance="simple" icon="false"}
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+utils::sessionInfo()
+```
+:::

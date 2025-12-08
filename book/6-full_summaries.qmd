@@ -1,0 +1,130 @@
+---
+title: "S6. Full model summaries"
+unnumbered: true
+---
+
+```{r}
+#| label: setup-final-summaries
+#| include: false
+
+# Load libraries needed for this chapter
+pacman::p_load(here, brms)
+```
+
+::: {.callout-note title="Variable definition"}
+\-`X5MISMATCH`: Phenological mismatch calculated using the 5% bloom threshold (in days).
+
+\-`CLUTCH_SIZE`: The number of eggs laid in a nest (ordinal).
+
+\-`FLEDS`: The number of chicks that successfully fledged (ordinal).
+
+\-`TIME`: Chronological time, represented as centered years to model temporal trends. Centering is done by subtracting the mean.
+
+\-`ZX5MISMATCH`: The centered phenological mismatch (5% threshold).
+
+\-`AGE`: The age of the focal individual (in years), centered.
+
+\-`AFR`: The age at first reproduction (in years), centered.
+
+\-`LONGEVITY`: The age at the last observation, a proxy for lifespan (in years), centered.
+
+\-`YEAR`: The calendar year of the observation (treated as a factor).
+
+\-`RING`: The unique alphanumeric identifier for each individual (treated as a factor).
+:::
+
+This section presents the posterior summaries for the best-supported models from each primary analysis. The models for Phenological mismatch and Number of fledglings were selected based on Leave-One-Out Cross-Validation (LOO-CV)
+
+```{r}
+#| label: summary-bloom
+#| eval: true
+#| size: "footnotesize"
+
+
+# Load the model
+model_bloom <- readRDS(here::here("Rdata", "model_delta5.rds"))
+
+# Print the full model summary
+summary(model_bloom)
+
+```
+
+::::: panel-tabset
+## Females
+
+::: panel-tabset
+## Phenological Mismatch
+
+```{r}
+#| label: summary-pm-female-final
+#| eval: true
+#| size: "footnotesize"
+
+
+# Load the model
+model_pm_female_best <- readRDS(here::here("Rdata", "female_fit_m8.rds"))
+
+# Print the full model summary
+summary(model_pm_female_best)
+
+```
+
+## Number of Fledglings
+
+```{r}
+#| label: summary-fs-female-final
+#| eval: true
+#| size: "footnotesize"
+
+
+# Load the model
+model_fs_female_best <- readRDS(here::here("Rdata", "female_fit_Q17.rds"))
+
+# Print the full model summary
+summary(model_fs_female_best)
+```
+:::
+
+## Males
+
+::: panel-tabset
+## Phenological Mismatch
+
+```{r}
+#| label: summary-pm-male-final
+#| eval: true
+#| size: "footnotesize"
+
+
+# Load the model
+model_pm_male_best <- readRDS(here::here("Rdata", "male_fit_m8.rds"))
+
+# Print the full model summary
+summary(model_pm_male_best)
+```
+
+## Number of Fledglings
+
+```{r}
+#| label: summary-fs-male-final
+#| eval: true
+#| size: "footnotesize"
+
+
+# Load the model
+model_fs_male_best <- readRDS(here::here("Rdata", "male_fit_Q17.rds"))
+
+# Print the full model summary
+summary(model_fs_male_best)
+```
+:::
+:::::
+
+::: {.callout-tip appearance="simple" icon="false"}
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+utils::sessionInfo()
+```
+:::
