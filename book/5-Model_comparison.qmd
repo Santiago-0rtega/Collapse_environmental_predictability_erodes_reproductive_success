@@ -1,0 +1,114 @@
+---
+title: " S5. Model comparison"
+---
+
+```{r}
+#| label: setup-model-comparison
+#| include: false
+
+# Load libraries needed for this chapter
+pacman::p_load(here, dplyr, DT,loo)
+```
+
+This section presents the results of the model comparisons used to identify the best-performing model for each analysis.
+
+All candidate models were evaluated with Leave-One-Out Cross-Validation (LOO-CV), which estimates a model’s out-of-sample predictive accuracy. Models are ranked by their expected log predictive density (elpd_diff):
+
+The top-ranked model in each table has an elpd_diff of 0 and is considered the best supported.
+
+The se_diff column reports the standard error of the difference, quantifying the uncertainty in ranking.
+
+# Models syntax
+
+::: panel-tabset
+## Gaussian models (Phenological mismatch)
+
+```{r}
+#| label: Gaussian models
+#| echo: false
+dfg <- read.csv(here("summaries","gaussian.csv"))
+DT::datatable(dfg, options = list(pageLength = 5))
+```
+
+## Ordinal models (Clutch size and Number of fledglings)
+
+```{r}
+#| label: Ordinal models
+#| echo: false
+dfo <- read.csv(here("summaries","ordinal.csv"))
+DT::datatable(dfo, options = list(pageLength = 5))
+```
+:::
+
+# Phenological Mismatch
+
+The following tables summarize the LOO-CV model comparisons for the Gaussian models of phenological mismatch. Results are shown separately for females and males.
+
+::: panel-tabset
+## Females
+
+```{r}
+#| label: loo-comparison-pm-females
+#| echo: false
+#| tbl-cap: "LOO-CV comparison for female phenological mismatch models."
+
+all_comparisonsPMf <- read.csv(here::here("summaries", "all_comparisonsPMf.csv"), header = TRUE) %>%
+  select(Model, elpd_diff, se_diff)
+
+DT::datatable(all_comparisonsPMf, options = list(pageLength = 10))
+```
+
+## Males
+
+```{r}
+#| label: loo-comparison-pm-males
+#| echo: false
+#| tbl-cap: "LOO-CV comparison for male phenological mismatch models."
+
+all_comparisonsPMm <- read.csv(here::here("summaries", "all_comparisonsPMm.csv"), header = TRUE) %>%
+  select(Model, elpd_diff, se_diff)
+
+DT::datatable(all_comparisonsPMm, options = list(pageLength = 10))
+```
+:::
+
+# Number of Fledglings
+
+The following tables summarize the LOO-CV model comparisons for the ordinal models of fledgling number. Results are shown separately for females and males.
+
+::: panel-tabset
+## Females
+
+```{r}
+#| label: loo-comparison-fs-females
+#| echo: false
+#| tbl-cap: "LOO-CV comparison for female fledgling success models."
+
+all_comparisonsFSf <- read.csv(here::here("summaries", "all_comparisonsFSf.csv"), header = TRUE) %>%
+  select(Model, elpd_diff, se_diff)
+
+DT::datatable(all_comparisonsFSf, options = list(pageLength = 10))
+```
+
+## Males
+
+```{r}
+#| label: loo-comparison-fs-males
+#| echo: false
+#| tbl-cap: "LOO-CV comparison for male fledgling success models."
+
+all_comparisonsFSm <- read.csv(here::here("summaries", "all_comparisonsFSm.csv"), header = TRUE) %>%
+  select(Model, elpd_diff, se_diff)
+
+DT::datatable(all_comparisonsFSm, options = list(pageLength = 10))
+```
+:::
+
+::: {.callout-tip appearance="simple" icon="false"}
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+utils::sessionInfo()
+```
+:::

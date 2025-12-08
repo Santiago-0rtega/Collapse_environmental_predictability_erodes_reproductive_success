@@ -1,0 +1,394 @@
+---
+title: "S4. Model diagnostics and selection"
+---
+
+```{r}
+#| label: setup-model-diagnostics
+#| include: false
+
+# For data manipulation (loads dplyr, tibble, etc.)
+library(tidyverse)
+
+# For file path management
+library(here)
+
+# For accessing model diagnostics (e.g., divergences)
+library(brms)
+
+# For summarizing posterior draws (e.g., for ESS checks)
+library(posterior)
+
+# For model comparison using LOO-CV
+library(loo)
+
+# For creating interactive HTML tables
+library(DT)
+```
+
+# Model diagnostics
+
+This section presents the R code used to evaluate model diagnostics and perform model comparisons for the Bayesian analyses reported in the main text. The workflow is divided into two components:
+
+Model diagnostics: automated checks for common fitting issues such as divergent transitions and low Effective Sample Size (ESS).
+
+Model comparison: systematic evaluation of predictive performance using Leave-One-Out Cross-Validation (LOO-CV).
+
+These procedures were applied to the `pheno_mismatch` and `fleds_full` analyses.
+
+::: {.callout-important appearance="simple"}
+Note: Diagnostics for bloom onset models were inspected directly from the model summaries because only one model per threshold was fitted.
+:::
+
+## Diagnostic and comparison functions
+
+::: panel-tabset
+## Function 1: `create_diagnostic_summary()`
+
+This function automates convergence and sampling-efficiency checks for Bayesian models. It identifies saved model files, loads them, and performs one of two checks:
+
+-   Divergences: counts the number of divergent transitions, which signal potential sampling bias.
+
+-   ESS: evaluates bulk and tail Effective Sample Size, flagging parameters with insufficient independent samples (\< 400; @vehtari_rank-normalization_2021).
+
+The results are compiled into a summary table for each model (separated by sex), reporting the outcome of the diagnostic and any problematic parameters
+
+```{r}
+#| label: Function 1
+#| eval: false
+#| code-fold: true
+create_diagnostic_summary <- function(analysis_name, check_type = "divergences", ess_threshold = 400) {
+  # --- Load required libraries ---
+  if (!require(here)) {install.packages("here"); library(here)}
+  if (!require(brms)) {install.packages("brms"); library(brms)}
+  if (!require(dplyr)) {install.packages("dplyr"); library(dplyr)}
+
+  # --- 1. Find all male and female model files ---
+  output_dir <- here("Rdata", analysis_name)
+  model_files <- list.files(output_dir, pattern = "^(male|female)_fit_.*\\.rds$", full.names = TRUE)
+
+  if (length(model_files) == 0) {
+    message("No model files found in ", output_dir)
+    return(invisible(NULL))
+  }
+
+  # --- 2. Initialize a list to store results ---
+  results_list <- list()
+
+  # --- 3. Loop through files, run checks, and store results ---
+  for (model_path in model_files) {
+    fit <- readRDS(model_path)
+    file_name <- basename(model_path)
+    
+    # Extract sex and model name
+    sex <- sub("_fit_.*", "", file_name)
+    model_name <- sub("^(male|female)_fit_(.*)\\.rds$", "\\2", file_name)
+
+    message(paste("Checking:", sex, model_name))
+
+    # --- Run the requested check ---
+    if (tolower(check_type) == "divergences") {
+      nuts_params <- nuts_params(fit)
+      check_value <- sum(subset(nuts_params, Parameter == "divergent__")$Value)
+      problem_params <- ifelse(check_value > 0, "Divergences present", NA_character_)
+
+    } else if (tolower(check_type) == "ess") {
+      if (!require(posterior)) {install.packages("posterior"); library(posterior)}
+      draws_summary <- posterior::summarise_draws(fit)
+      low_ess_params <- filter(draws_summary, ess_bulk < ess_threshold | ess_tail < ess_threshold)
+      check_value <- nrow(low_ess_params)
+      problem_params <- ifelse(check_value > 0, paste(low_ess_params$variable, collapse = ", "), NA_character_)
+
+    } else {
+      stop("Invalid 'check_type'. Please use 'divergences' or 'ess'.")
+    }
+
+    # Store the results for the current model
+    results_list[[length(results_list) + 1]] <- tibble(
+      Sex = sex,
+      Model = model_name,
+      Check_Result = check_value,
+      Problematic_Parameters = problem_params
+    )
+  }
+
+  # --- 4. Combine list into a final table and return ---
+  final_table <- bind_rows(results_list)
+
+  # Rename the Check_Result column to be more descriptive
+  if (tolower(check_type) == "divergences") {
+    final_table <- rename(final_table, Divergences = Check_Result)
+  } else {
+    final_table <- rename(final_table, Low_ESS_Count = Check_Result)
+  }
+  
+  return(final_table)
+}
+```
+
+## Function 2: `list_analysis_models()`
+
+This function inventories all available pre-computed LOO objects for a given analysis, producing an organized data frame of models (sex, model name, file path) available for comparison.
+
+```{r}
+#| label: Function 2
+#| eval: false
+list_analysis_models <- function(analysis_name) {
+  if (!require(here)) {install.packages("here"); library(here)}
+  if (!require(dplyr)) {install.packages("dplyr"); library(dplyr)}
+  
+  output_dir <- here("Rdata", analysis_name)
+  all_loo_files <- list.files(output_dir, pattern = "^(male|female)_loo_.*\\.rds$", full.names = TRUE)
+  
+  if (length(all_loo_files) == 0) {
+    message("No 'male' or 'female' LOO files found in ", output_dir)
+    return(tibble())
+  }
+  
+  model_inventory <- tibble(file_path = all_loo_files) %>%
+    mutate(
+      file_name = basename(file_path),
+      sex = sub("_loo_.*", "", file_name),
+      model_name = sub("^(male|female)_loo_(.*)\\.rds$", "\\2", file_name)
+    ) %>%
+    select(sex, model_name, file_path)
+    
+  return(model_inventory)
+}
+```
+
+## Function 3: `compare_models_by_sex()`
+
+This function performs model comparison using the `loo` package. Models are grouped by sex, optionally excluding problematic fits, and ranked by their expected log predictive density (ELPD). The output highlights relative model performance, including differences in ELPD, standard errors, and LOO Information Criterion (LOOIC).
+
+```{r}
+#| label: Function 3
+#| eval: false
+compare_models_by_sex <- function(model_inventory, exclude_models = NULL) {
+  if (!require(loo)) {install.packages("loo"); library(loo)}
+  if (!require(dplyr)) {install.packages("dplyr"); library(dplyr)}
+
+  comparison_results <- list()
+
+  for (current_sex in c("male", "female")) {
+    cat(paste0("\n\n###--- LOO Comparison for ", toupper(current_sex), " Models ---###\n\n"))
+
+    # Filter the inventory for the current sex
+    sex_models_df <- model_inventory %>% filter(sex == current_sex)
+
+    # Get the specific list of models to exclude
+    models_to_exclude <- exclude_models[[current_sex]]
+    
+    if (!is.null(models_to_exclude) && nrow(sex_models_df) > 0) {
+      sex_models_df <- sex_models_df %>% filter(!model_name %in% models_to_exclude)
+      message(paste("For", current_sex, ", excluding models:", paste(models_to_exclude, collapse=", ")))
+    }
+
+    if (nrow(sex_models_df) < 2) {
+      message(paste("Not enough models to compare for '", current_sex, "' (need at least 2). Skipping."))
+      next
+    }
+
+    # Load the relevant LOO objects into a named list
+    loo_list <- setNames(
+      lapply(sex_models_df$file_path, readRDS), 
+      sex_models_df$model_name
+    )
+
+    message(paste0("Comparing ", length(loo_list), " '", current_sex, "' models..."))
+    
+    # Perform the comparison and print it
+    comparison <- loo_compare(x = loo_list)
+    print(comparison)
+    
+    comparison_results[[current_sex]] <- comparison
+  }
+
+  invisible(comparison_results)
+}
+```
+:::
+
+# Application to Analyses
+
+The following sections apply the above functions to each analysis set. \## Phenological Mismatch (`pheno_mismatch`)
+
+::::: panel-tabset
+## Diagnostic Checks
+
+Both divergent transitions and low ESS values were checked across all models in this analysis set.
+
+::: panel-tabset
+## Divergent transitions
+
+```{r}
+#| label: Check for divergences PM
+#| eval: false
+# Check for divergent transitions
+divergence_summaryPM <- create_diagnostic_summary("pheno_mismatch", check_type = "divergences")
+print(divergence_summaryPM)
+```
+
+```{r}
+#| label: DIVERGENCIES PM
+#| echo: false
+divergence_summaryPM<-read.csv(here("summaries","divergence_summaryPM.csv"),header=T)
+DT::datatable(divergence_summaryPM, options = list(pageLength = 5))
+
+```
+
+## Effective Sample Size (ESS)
+
+```{r}
+#| label: Check for divergences and low ESS pheno_mismatch
+#| eval: false
+# Check for low Effective Sample Size (ESS)
+ess_summaryPM <- create_diagnostic_summary("pheno_mismatch", check_type = "ess", ess_threshold = 400)
+print(ess_summaryPM)
+```
+
+```{r}
+#| label: ESS PM
+#| echo: false
+ess_summaryPM<-read.csv(here("summaries","ess_summaryPM.csv"),header=T)
+DT::datatable(ess_summaryPM, options = list(pageLength = 5))
+```
+:::
+
+## Model comparison
+
+```{r}
+#| label: Model comparison pheno_mismatch
+#| eval: false
+# Create an inventory of all LOO objects for the analysis
+model_inventoryPM <- list_analysis_models("pheno_mismatch")
+
+# Define models to exclude from comparison (e.g., due to divergences or low ESS)
+bad_models_list <- list(
+  male = c("m12","m6","m9"),
+   female = c("m12","m6","m9")
+)
+# Run the LOO comparison, excluding the problematic models
+all_comparisonsPM <- compare_models_by_sex(model_inventoryPM, exclude_models = bad_models_list)
+```
+
+::: panel-tabset
+## Female summary
+
+```{r}
+#| label: MODELS PM females
+#| echo: false
+all_comparisonsPMf<-read.csv(here("summaries","all_comparisonsPMf.csv"),header=T) %>%
+  select(Model, elpd_diff, se_diff)
+DT::datatable(all_comparisonsPMf, options = list(pageLength = 5))
+
+```
+
+## Male summary
+
+```{r}
+#| label: MODELS PM males
+#| echo: false
+all_comparisonsPMm<-read.csv(here("summaries","all_comparisonsPMm.csv"),header=T) %>%
+  select(Model, elpd_diff, se_diff)
+DT::datatable(all_comparisonsPMm, options = list(pageLength = 5))
+
+```
+:::
+:::::
+
+## Number of fledglings (`fleds_full`)
+
+::::: panel-tabset
+## Diagnostic Checks
+
+::: panel-tabset
+## Divergent transitions
+
+```{r}
+#| label: Check for divergences  fleds_full
+#| eval: false
+
+divergence_summaryFS <- create_diagnostic_summary("fleds_full", check_type = "divergences")
+DT::datatable(divergence_summaryFS, options = list(pageLength = 5))
+
+
+```
+
+```{r}
+#| label: divergences fleds_full
+#| echo: false
+divergence_summaryFS <-read.csv(here("summaries","divergence_summaryFS.csv"),header=T)
+
+DT::datatable(divergence_summaryFS, options = list(pageLength = 5))
+```
+
+## Low ESS
+
+```{r}
+#| label: Check for low ESS fleds_full
+#| eval: false
+ess_summaryFS <- create_diagnostic_summary("fleds_full", check_type = "ess", ess_threshold = 400)
+DT::datatable(ess_summaryFS, options = list(pageLength = 5))
+```
+
+```{r}
+#| label: ESS fleds_full
+#| echo: false
+ess_summaryFS<-read.csv(here("summaries","ess_summaryFS .csv"),header=T)
+DT::datatable(ess_summaryFS, options = list(pageLength = 5))
+```
+:::
+
+## Model comparison
+
+```{r}
+#| label: Model comparison fleds_full
+#| eval: false
+
+# Create an inventory of all LOO objects for the analysis
+model_inventoryFS <- list_analysis_models("fleds_full")
+print(model_inventoryFS)
+
+# Define models to exclude from comparison
+bad_models_listFS <- list(
+  male = c("ABS10","ABS16","Q3"
+           ),
+   female = c("ABS3","m3","Q9","Q3","Q6"
+              )
+)
+
+# Run the LOO comparison
+all_comparisonsFS <- compare_models_by_sex(model_inventoryFS, exclude_models = bad_models_listFS)
+```
+
+::: panel-tabset
+## Female summary
+
+```{r}
+#| label: MODELS FS female
+#| echo: false
+all_comparisonsFSf <-read.csv(here("summaries","all_comparisonsFSf.csv"),header=T) %>%
+  select(Model, elpd_diff, se_diff)
+DT::datatable(all_comparisonsFSf, options = list(pageLength = 5))
+```
+
+## Male summary
+
+```{r}
+#| label: MODELS FS male
+#| echo: false
+all_comparisonsFSm <-read.csv(here("summaries","all_comparisonsFSm.csv"),header=T) %>%
+  select(Model, elpd_diff, se_diff)
+DT::datatable(all_comparisonsFSm, options = list(pageLength = 5))
+```
+:::
+:::::
+
+::: {.callout-tip appearance="simple" icon="false"}
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+utils::sessionInfo()
+```
+:::

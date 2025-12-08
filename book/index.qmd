@@ -1,0 +1,26 @@
+## Overview
+
+This document provides the supplementary material accompanying our study *Climate-driven variability in phenological mismatch undermines reproductive success in a tropical apex predator*. It contains additional methodological details, model workflows, diagnostic checks, sensitivity analyses, and all supporting figures.
+
+To ensure transparency and reproducibility, we also provide the complete datasets (in `.csv` format) and the full statistical models (as R Data Serializable `.rds` files). All files are available in the public repository:
+
+
+### Contents
+
+S1. Chlorophyll-a bloom detection
+
+S2. Phenological mismatches
+
+S3. Model fitting workflow
+
+S4. Model diagnostics and selection
+
+S5. Model comparison
+
+S6. Supplementary figures
+
+S7. Sensitivity analyses: Bloom onset thresholds
+
+S8. Sensitivity analyses: Bloom threshold definition
+
+S9. Code for figures

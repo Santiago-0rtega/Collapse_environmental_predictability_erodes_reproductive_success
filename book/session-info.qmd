@@ -1,0 +1,10 @@
+---
+title: "Session information"
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+sessioninfo::session_info()
+```

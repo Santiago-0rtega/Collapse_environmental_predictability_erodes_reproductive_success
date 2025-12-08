@@ -1,0 +1,61 @@
+project:
+  type: book
+  
+
+book:
+  title: "Climate-driven variablity in phenological mismatch undermines reproductive success in a Tropical apex predator"
+  title-short: "Phenological Mismatch in a Tropical Predator"
+  author:
+    - name: Santiago Ortega
+    - name: Cristina Rodríguez
+    - name: Ayumi Mizuno
+    - name: Laura Arroyo
+    - name: Hugh Drummond
+    - name: Shinichi Nakagawa
+
+  date: last-modified
+  date-format: "MMMM D, YYYY"
+  cover-image: Sula.JPG
+  chapters:
+    - index.qmd
+    - part: "Main Analysis"
+      chapters:
+        - 1-bloom-onset.qmd
+        - 2-phenological-mismatches.qmd
+        - 3-model-fitting.qmd
+        - 4-diagnostics.qmd
+        - 5-Model_comparison.qmd
+        - 6-full_summaries.qmd
+        - 7-figures.qmd
+    - part: "Appendices"
+      chapters:
+        - sensitivity_blooms.qmd
+        - sensitivity_mismatch.qmd
+        - code_figures.qmd
+        
+  navbar:
+    right:
+      - icon: github
+        href: https://github.com/Santiago-0rtega/BFB_supplementary
+
+number-sections: false 
+bibliography: references.bib
+biblio-style: apalike
+
+format:
+  html:
+    theme:
+      light: litera
+      dark: darkly
+    mainfont: "Atkinson Hyperlegible"
+    code-tools: true
+    toc: true
+    toc-depth: 3
+    toc-location: left
+
+execute:
+  freeze: auto # Automatically caches results to speed up rendering
+  warning: false
+  message: false
+
+editor: visual

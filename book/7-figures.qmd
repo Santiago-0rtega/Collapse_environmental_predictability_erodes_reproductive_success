@@ -1,0 +1,19 @@
+---
+title: "S7. Supplementary figures"
+---
+
+Figure Legend: In all figures, solid lines represent population-level mean predictions, with 95% credible intervals shown as shaded ribbons. Points represent raw data. For plots showing phenological mismatch against age or year, point size is proportional to the number of daily observations. For plots showing fledging success probabilities, points are the observed proportions for each fledgling count. The consistency of an outcome among individuals is measured by its standard deviation (σ), while the consistency of fledging success is measured by the ordinal discrimination parameter (ζ) on a log scale
+
+# Females
+
+![Figure S6.1 Age-related effects on breeding performance in female boobies (n=2,581). Panels show how age influences (A) the mean and (B) individual consistency (σ) of phenological mismatch, as well as (C) the probability and (D) consistency (ζ) of fledging success.](Plots/combined_fig_females_age_effects.jpg)
+
+![Figure S6.2. The negative effect of phenological mismatch on fledging success in female boobies (n=2,581). Panels show (A) the probability of fledging 0, 1, 2, or 3 offspring and (B) the consistency of this outcome (ζ) as mismatch increases](Plots/panel_fig_females_fledging_mismatch.jpg)
+
+# Males
+
+![Figure S6.3. Temporal trends in environmental conditions and breeding performance for male boobies (n=2,910) from 2003–2023. Panels show annual changes in (A) the onset and (B) predictability (σ) of the spring bloom; (C) the mean and (D) individual consistency (σ) of phenological mismatch; and (E) the probability and (F) consistency (ζ) of fledging success.](Plots/panel_fig_males_time.jpg)
+
+![Figure S6.4. Age-related effects on breeding performance in male boobies (n=2,910). Panels show how age influences (A) the mean and (B) individual consistency (σ) of phenological mismatch, as well as (C) the probability and (D) consistency (ζ) of fledging success.](Plots/combined_fig_males_age_effects.jpg)
+
+![Figure S6.5. he negative effect of phenological mismatch on fledging success in male boobies (n=2,910). Panels show (A) the probability of fledging 0, 1, 2, or 3 offspring and (B) the consistency of this outcome (ζ) as mismatch increases.](Plots/panel_fig_males_fledging_mismatch.jpg)
