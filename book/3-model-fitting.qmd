@@ -186,7 +186,6 @@ Before fitting the models, the primary dataset was loaded and pre-processed. Sep
 :::
 
 ::: panel-tabset
-
 ## Load female data
 
 ```{r}
@@ -213,6 +212,7 @@ dat <- read.csv(here("data", "Lay_date_mismatches_250702.csv")) %>%
     
   )
 ```
+
 ## Load male data
 
 ```{r}
@@ -235,8 +235,6 @@ dat0 <- read.csv(here("data", "Lay_date_mismatches_250702.csv")) %>%
     
   )
 ```
-
-
 :::
 
 ## Models syntax
