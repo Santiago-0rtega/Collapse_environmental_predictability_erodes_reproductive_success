@@ -6,7 +6,7 @@ Figure Legend: In all figures, solid lines represent population-level mean predi
 
 # Females
 
-![Figure S6.1 Age-related effects on breeding performance in female boobies (n=2,581). Panels show how age influences (A) the mean and (B) individual consistency (σ) of phenological mismatch, as well as (C) the probability and (D) consistency (ζ) of fledging success.](Plots/combined_fig_females_age_effects.jpg)
+![Figure S6.1 Age-related effects on breeding performance in female boobies (n=2,581). Panels show how age influences (A) the mean and (B) individual consistency (σ) of phenological mismatch, as well as (C) the probability and (D) consistency (ζ) of fledging success.](/Plots/combined_fig_females_age_effects.jpg)
 
 ![Figure S6.2. The negative effect of phenological mismatch on fledging success in female boobies (n=2,581). Panels show (A) the probability of fledging 0, 1, 2, or 3 offspring and (B) the consistency of this outcome (ζ) as mismatch increases](Plots/panel_fig_females_fledging_mismatch.jpg)
 

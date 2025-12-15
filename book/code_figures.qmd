@@ -96,8 +96,8 @@ Data and pre-trained models are loaded from their respective files. This include
 #| warning: false
 #| eval: false
 
-bloom_dat_raw <- read.csv(here("data", "bloom_dates.csv"))
-bloom_model <- readRDS(here("Rdata", "model_delta5.rds"))
+bloom_dat_raw <- read.csv(here("..","data", "bloom_dates.csv"))
+bloom_model <- readRDS(here("..","Rdata", "model_delta5.rds"))
 
 ```
 
@@ -109,9 +109,9 @@ bloom_model <- readRDS(here("Rdata", "model_delta5.rds"))
 #| warning: false
 #| eval: false
 
-female_dat_raw <- read.csv(here("data", "Lay_date_mismatches_250702.csv"))
-mismatch_modelf <- readRDS(here("Rdata", "female_fit_m8.rds"))
-fledging_modelf <- readRDS(here("Rdata", "female_fit_Q17.rds"))
+female_dat_raw <- read.csv(here("..","data", "Lay_date_mismatches_250702.csv"))
+mismatch_modelf <- readRDS(here("..","Rdata", "female_fit_m8.rds"))
+fledging_modelf <- readRDS(here("..","Rdata", "female_fit_Q17.rds"))
 ```
 
 ## Males
@@ -123,9 +123,9 @@ fledging_modelf <- readRDS(here("Rdata", "female_fit_Q17.rds"))
 #| eval: false
 
 
-male_dat_raw <- read.csv(here("data", "Lay_date_mismatches_250702.csv"))
-mismatch_modelm <- readRDS(here("Rdata", "male_fit_m8.rds"))
-fledging_modelm <- readRDS(here("Rdata", "male_fit_Q17.rds"))
+male_dat_raw <- read.csv(here("..","data", "Lay_date_mismatches_250702.csv"))
+mismatch_modelm <- readRDS(here("..","Rdata", "male_fit_m8.rds"))
+fledging_modelm <- readRDS(here("..","Rdata", "male_fit_Q17.rds"))
 ```
 :::
 
@@ -624,7 +624,7 @@ plot_E <- ggplot() +
   my_x_scale +
   scale_y_continuous(breaks = seq(0, 1, 0.2), minor_breaks = seq(0,1,0.1),limits = c(0, 1),guide = guide_axis(minor.ticks = TRUE)) +
   labs(
-    subtitle = "\u03B2 = -0.37, 95% CI = [-0.91, -0.04]",
+    subtitle = "\u03B2 = -0.42, 95% CI = [-1.07, -0.03]",
     y = "Probability of Nest Success",
     x = NULL
   ) +
@@ -636,42 +636,10 @@ plot_F <- ggplot(fledging_time_drawsf, aes(x = actual_time, y = disc)) +
   stat_lineribbon(data = fledging_time_drawsf, aes(x = actual_time, y = disc), fill = NA, color = "black", linewidth = 1)+
  my_x_scale  +
   scale_y_continuous(breaks = seq(0,0.5, 0.1), limits = c(0,0.5),guide = guide_axis(minor.ticks = TRUE)) +
-  labs(subtitle = "\u03B2 = -0.01, 95% CI = [-0.02, -0.01]", 
+  labs(subtitle = "\u03B2 = -0.02, 95% CI = [-0.02, -0.01]", 
        y = "Consistency (\u03B6)",
        x = NULL) +
   custom_theme()+theme(plot.subtitle = element_text(face="bold"))
-
-
-```
-
-### Extra code: plot each level of the ordinal variable
-
-```{r}
-#| label: figure-1-plot-E-F-females
-#| message: false
-#| warning: false
-#| eval: false
-
-# Create plot E
-plot_E_full <- ggplot() +
-  stat_lineribbon(data = fledging_time_drawsf, aes(x = actual_time, y = .epred, fill = .category), .width = 0.95, alpha = 0.7) +
-  geom_point(data = fledging_props_timef, aes(x = ori_time, y = proportion, bg = FLEDS), shape = 21, color = "white", size = 2, alpha = 0.6) +
-  scale_fill_manual(values = c("0" = "#E41A1C", "1" = "#377EB8", "2" = "#4DAF4A", "3" = "#984EA3"), name = "Number of Fledglings:") +
-  scale_color_manual(values = c("0" = "#E41A1C", "1" = "#377EB8", "2" = "#4DAF4A", "3" = "#984EA3")) +
-  my_x_scale   +
-  scale_y_continuous(breaks = seq(0,1, 0.2), limits = c(0,1)) +
-  labs(
-    subtitle = "Number of fledglings",
-    y = "",
-    x = NULL
-  ) +
-  custom_theme(show_legend = TRUE)+
-  theme(
-    legend.position.inside = c(0.8, 0.85), 
-    legend.title = element_text(size = rel(0.8)), 
-    legend.text = element_text(size = rel(0.7)),
-    legend.background = element_rect(fill = "white", color = "black", linewidth = 0.2) 
-  )
 
 
 ```
@@ -698,7 +666,7 @@ plot_Em <- ggplot() +
   my_x_scale +
   scale_y_continuous(breaks = seq(0, 1, 0.2), minor_breaks = seq(0,1,0.1), limits = c(0, 1),guide = guide_axis(minor.ticks = TRUE)) +
   labs(
-    subtitle = "\u03B2 = -0.40, 95% CI = [-0.96, -0.06]",
+    subtitle = "\u03B2 = -0.48, 95% CI = [-1.25, -0.07]",
     y = "Probability of Nest Success",
     x = NULL
   ) +
@@ -722,29 +690,6 @@ plot_Fm <- ggplot(fledging_time_drawsm, aes(x = actual_time, y = disc)) +
 
 
 
-
-```
-
-```{r}
-#| eval: false
-plot_Em_extra <- ggplot() +
-  stat_lineribbon(data = fledging_time_drawsm, aes(x = actual_time, y = .epred, fill = .category), .width = 0.95, alpha = 0.7) +
-  geom_point(data = fledging_props_timem, aes(x = ori_time, y = proportion, bg = FLEDS), shape = 21, color = "white", size = 2, alpha = 0.6) +
-  scale_fill_manual(values = c("0" = "#E41A1C", "1" = "#377EB8", "2" = "#4DAF4A", "3" = "#984EA3"), name = "Number of Fledglings:") +
-  scale_color_manual(values = c("0" = "#E41A1C", "1" = "#377EB8", "2" = "#4DAF4A", "3" = "#984EA3")) +
-  my_x_scale   +
-  scale_y_continuous(breaks = seq(0,1, 0.2), limits = c(0,1)) +
-  labs(
-    subtitle = "Number of fledglings",
-    y = "",
-    x = NULL
-  ) +
-  custom_theme(show_legend = TRUE)+
-  theme(
-    legend.position.inside = c(0.8, 0.85), 
-    legend.title = element_text(size = rel(0.8)), 
-    legend.text = element_text(size = rel(0.7)),
-    legend.background = element_rect(fill = "white", color = "black", linewidth = 0.2) )
 
 ```
 :::
@@ -795,27 +740,17 @@ figure2_male <- (plot_Cm | plot_Dm) /
 figure2_male
 ```
 
-::: panel-tabset
-## Females
-
-![Temporal trends in female phenology and fitness](Plots/panel_fig2_females_time.jpg)
-
-## Males
-
-![Temporal trends in male phenology and fitness](Plots/panel_fig2_males_time.jpg)
-:::
-
 The assembled figure is then saved as both a PDF and JPG file.
 
 ```{r}
 #| label: save-figure.
 #| eval: false
 
-ggsave(filename = here("Plots", "panel_fig2_females_time.pdf"),
+ggsave(filename = here("..","Plots", "panel_fig2_females_time.pdf"),
        plot = figure2_female,
        dpi = 300, device = cairo_pdf)
 
-ggsave(filename = here("Plots", "panel_fig2_females_time.jpg"),
+ggsave(filename = here("..","Plots", "panel_fig2_females_time.jpg"),
        plot = figure2_female,
        width = 7,  
        height = 9,  
@@ -824,11 +759,11 @@ ggsave(filename = here("Plots", "panel_fig2_females_time.jpg"),
 
 
 
-ggsave(filename = here("Plots", "panel_fig2_males_time.pdf"),
+ggsave(filename = here("..","Plots", "panel_fig2_males_time.pdf"),
        plot = figure2_male,
        dpi = 300, device = cairo_pdf)
 
-ggsave(filename = here("Plots", "panel_fig2_males_time.jpg"),
+ggsave(filename = here("..","Plots", "panel_fig2_males_time.jpg"),
        plot = figure2_male,
        width = 7,  
        height = 7,  
@@ -969,16 +904,6 @@ individual_predictions_male <- mismatch_modelm %>%
 :::
 
 The next two chunks create Plot G (mismatch vs. age) and Plot H (consistency vs. age).
-
-```{r}
-#| eval: false
-# Create plot C
-
-#plot_C \<- ggplot() +geom_jitter(data = dat_count_mismatch_yearf, aes(x = ori_time, y = X5MISMATCH, size = n), width = 0.2, height = 0, shape = 21, alpha = 0.2,stroke=0.1, fill = "#d2bfb8", colour = "#9096b1")+ stat_lineribbon(data = mismatch_time_drawsf, aes(x = actual_time, y = .epred), .width = 0.95, alpha = 0.6, fill = "#a0786e") + stat_lineribbon(data = mismatch_time_drawsf, aes(x = actual_time, y = .epred), fill = NA, color = "black", linewidth = 1) + my_x_scale + scale_y_continuous(breaks = seq(-50,150, 30), limits = c(-50,150)) + labs( subtitle = "\u03B2 = -1.98, 95% CI = \[-5.26, 1.35\]", y = "Phenological mismatch (days)", x = NULL ) + custom_theme() + theme(legend.position = "none")
-
-#plot_D \<- ggplot() +geom_jitter(data = dat_count_sigma_year_female, aes(x = ori_time, y = raw_sigma), width = 0.2, height = 0, shape = 21, alpha = 0.2,stroke=0.1, fill = "#b1ab90", colour = "#b8cbd2",size=1)+ stat_lineribbon(data = mismatch_time_drawsf, aes(x = actual_time, y = sigma), .width = 0.95, alpha = 0.6, fill = "#cbba62") + stat_lineribbon(data = mismatch_time_drawsf, aes(x = actual_time, y = sigma), fill = NA, color = "black", linewidth = 1) + my_x_scale + scale_y_continuous(breaks = seq(0,60, 15), limits = c(0,60)) + labs(subtitle = "\u03B2 = 0.02, 95% CI = \[0.02, 0.03\]", y = "Inconsistency (\u03C3)", x = NULL ) + custom_theme() + theme(legend.position = "none")+theme(plot.subtitle = element_text(face="bold"))
-```
-
 
 ::: panel-tabset
 ## Females
@@ -1169,7 +1094,7 @@ fledging_success_props_agem <- dat_male_fledging%>%
 ```
 :::
 
-The next chunks build the bottom row of the figure: fledgling probabilities vs. age and fledgling consistency vs. age.
+The next chunks build the bottom row of the figure: fledgling probabilities vs. age.
 
 ::: panel-tabset
 ## Females
@@ -1207,11 +1132,10 @@ plot_fledging_success_age <- ggplot() +
   ) +
 
   labs(
-    subtitle = "\u03B2 = -0.06, 95% CI = [-0.13, -0.03]",
+    subtitle = "\u03B2 = -0.08, 95% CI = [-0.16, -0.03]",
     y = "Probability of Nest Success",
     x = "Age (years)"
   ) +
-  
 
   custom_theme(show_legend = FALSE)+theme(plot.subtitle = element_text(face="bold"))
 
@@ -1252,7 +1176,7 @@ plot_fledging_success_agem <- ggplot() +
   ) +
 
   labs(
-    subtitle = "\u03B2 = -0.03, 95% CI = [-0.07, -0.01]",
+    subtitle = "\u03B2 = -0.04, 95% CI = [-0.09, -0.01]",
     y = "Probability of Nest Success",
     x = "Age (years)"
   ) +
@@ -1263,9 +1187,7 @@ plot_fledging_success_agem <- ggplot() +
 ```
 :::
 
-# Figure 4: Fledgling Success vs. Mismatch
-
-This final figure for females shows the direct relationship between phenological mismatch and the probability of fledgling success.
+This panel shows the direct relationship between phenological mismatch and the probability of fledgling success.
 
 Model predictions are generated for fledgling success across the full range of observed mismatch values.
 
@@ -1279,7 +1201,7 @@ Model predictions are generated for fledgling success across the full range of o
 #| eval: false
 
 mean_of_original_mismatchf <- mean(dat_female_fledging$X5MISMATCH, na.rm = TRUE)
-
+# --- 1. Generate Raw Predictions ---
 mismatch_drawsf <- fledging_modelf %>%
   epred_draws(
     newdata = expand.grid(
@@ -1295,42 +1217,53 @@ mismatch_drawsf <- fledging_modelf %>%
   mutate(actual_mismatch = ZX5MISMATCH + mean_of_original_mismatchf)
 
 
-# 1. Calculate posterior draws for "success" (fledglings > 0)
-fledging_success_drawsf <- mismatch_drawsf %>%
-  filter(.category != "0") %>%
-  group_by(across(-c(.epred, .category))) %>% 
-  summarize(prob_success = sum(.epred), .groups = 'drop')
+# --- 2. Aggregate Predictions into 3 Categories (0, 1-2, 3) ---
+fledging_grouped_drawsf <- mismatch_drawsf %>%
+  # Create the new grouping variable based on .category
+  mutate(fled_group = case_when(
+    .category == "0" ~ "0",
+    .category %in% c("1", "2") ~ "1-2", # Grouping 1 and 2 to see the quadratic effect
+    .category == "3" ~ "3",
+    TRUE ~ NA_character_ # Just in case there are >3, or handle accordingly
+  )) %>%
+  # Filter out any categories we aren't interested in (if any exist)
+  filter(!is.na(fled_group)) %>%
+  # Sum the probabilities (.epred) within the new groups for every draw
+  group_by(actual_mismatch, .draw, fled_group) %>% 
+  summarize(prob_val = sum(.epred), .groups = 'drop') 
 
-# 2. Calculate observed binned proportions for "success"
-fledging_success_propsf <- dat_female_fledging %>%
+# --- 3. Calculate Observed Proportions for the 3 Categories ---
+fledging_grouped_propsf <- dat_female_fledging %>%
   filter(!is.na(X5MISMATCH)) %>%
+  # Create the same grouping variable in the raw data
   mutate(
-    SUCCESS = ifelse(FLEDS == "0", "Failure (0)", "Success (1+)")
+    fled_group = case_when(
+      FLEDS == "0" ~ "0",
+      FLEDS %in% c("1", "2") ~ "1-2",
+      FLEDS == "3" ~ "3",
+      TRUE ~ "Other"
+    )
   ) %>%
-  # Count success/failure for each *exact* X5MISMATCH value
-  count(X5MISMATCH, SUCCESS) %>%
+  filter(fled_group %in% c("0", "1-2", "3")) %>%
+  # Count occurrences per mismatch value and group
+  count(X5MISMATCH, fled_group) %>%
+  # Ensure all groups exist for all mismatch values (fill with 0 if missing)
   tidyr::complete(X5MISMATCH, 
-                  SUCCESS = c("Failure (0)", "Success (1+)"), 
+                  fled_group = c("0", "1-2", "3"), 
                   fill = list(n = 0)) %>%
-  # Group by that exact value
+  # Calculate proportions
   group_by(X5MISMATCH) %>%
-  # Calculate proportion of success
   mutate(total_n_year = sum(n),
          proportion = ifelse(total_n_year > 0, n / total_n_year, 0)) %>%
-  filter(SUCCESS == "Success (1+)") %>% # Only need to plot the success points
   ungroup()
 
-
-
-
-
-
-success_mismatch_label_dataf <- fledging_success_drawsf %>%
+# --- 4. Generate Label Data for Plotting ---
+group_mismatch_label_dataf <- fledging_grouped_drawsf %>%
   filter(actual_mismatch == min(actual_mismatch) | actual_mismatch == max(actual_mismatch)) %>%
-  group_by(actual_mismatch) %>%
-  summarise(mean_success_perc = mean(prob_success) * 100, .groups = 'drop')
+  group_by(actual_mismatch, fled_group) %>%
+  summarise(mean_prob_perc = mean(prob_val) * 100, .groups = 'drop')
 
-success_mismatch_label_dataf
+group_mismatch_label_dataf
 ```
 
 ## Males
@@ -1358,186 +1291,55 @@ mismatch_drawsm <- fledging_modelm %>%
   mutate(actual_mismatch = ZX5MISMATCH + mean_of_original_mismatchm)
 
 
-# 1. Calculate posterior draws for "success" (fledglings > 0)
-fledging_success_drawsm <- mismatch_drawsm %>%
-  filter(.category != "0") %>%
-  group_by(across(-c(.epred, .category))) %>% 
-  summarize(prob_success = sum(.epred), .groups = 'drop')
+# --- 2. Aggregate Predictions into 3 Categories (0, 1-2, 3) ---
+fledging_grouped_drawsm <- mismatch_drawsm %>%
+  # Create the new grouping variable based on .category
+  mutate(fled_group = case_when(
+    .category == "0" ~ "0",
+    .category %in% c("1", "2") ~ "1-2", # Grouping 1 and 2 to see the quadratic effect
+    .category == "3" ~ "3",
+    TRUE ~ NA_character_ # Just in case there are >3, or handle accordingly
+  )) %>%
+  # Filter out any categories we aren't interested in (if any exist)
+  filter(!is.na(fled_group)) %>%
+  # Sum the probabilities (.epred) within the new groups for every draw
+  group_by(actual_mismatch, .draw, fled_group) %>% 
+  summarize(prob_val = sum(.epred), .groups = 'drop') 
 
-# 2. Calculate observed binned proportions for "success"
-fledging_success_propsm <- dat_male_fledging %>%
+# --- 3. Calculate Observed Proportions for the 3 Categories ---
+fledging_grouped_propsm <- dat_male_fledging %>%
   filter(!is.na(X5MISMATCH)) %>%
+  # Create the same grouping variable in the raw data
   mutate(
-    SUCCESS = ifelse(FLEDS == "0", "Failure (0)", "Success (1+)")
+    fled_group = case_when(
+      FLEDS == "0" ~ "0",
+      FLEDS %in% c("1", "2") ~ "1-2",
+      FLEDS == "3" ~ "3",
+      TRUE ~ "Other"
+    )
   ) %>%
-  # Count success/failure for each *exact* X5MISMATCH value
-  count(X5MISMATCH, SUCCESS) %>%
+  filter(fled_group %in% c("0", "1-2", "3")) %>%
+  # Count occurrences per mismatch value and group
+  count(X5MISMATCH, fled_group) %>%
+  # Ensure all groups exist for all mismatch values (fill with 0 if missing)
   tidyr::complete(X5MISMATCH, 
-                  SUCCESS = c("Failure (0)", "Success (1+)"), 
+                  fled_group = c("0", "1-2", "3"), 
                   fill = list(n = 0)) %>%
-  # Group by that exact value
+  # Calculate proportions
   group_by(X5MISMATCH) %>%
-  # Calculate proportion of success
   mutate(total_n_year = sum(n),
          proportion = ifelse(total_n_year > 0, n / total_n_year, 0)) %>%
-  filter(SUCCESS == "Success (1+)") %>% # Only need to plot the success points
   ungroup()
 
-
-# 3. Create data frame for min/max mismatch values (for printing)
-success_mismatch_label_datam <- fledging_success_drawsm %>%
+# --- 4. Generate Label Data for Plotting ---
+group_mismatch_label_datam <- fledging_grouped_drawsm %>%
   filter(actual_mismatch == min(actual_mismatch) | actual_mismatch == max(actual_mismatch)) %>%
-  group_by(actual_mismatch) %>%
-  summarise(mean_success_perc = mean(prob_success) * 100, .groups = 'drop')
+  group_by(actual_mismatch, fled_group) %>%
+  summarise(mean_prob_perc = mean(prob_val) * 100, .groups = 'drop')
 
-
-success_mismatch_label_datam
+group_mismatch_label_datam
 ```
 :::
-
-Two plots are created: one showing the probability of fledging success versus mismatch, and another showing the consistency of that success versus mismatch
-
-```{r}
-#| eval: false
-# Assuming ZX5MISMATCH was centered, calculating the mean of the ORIGINAL mismatch variable
-# to correctly scale the plot axis (if necessary).
-mean_of_original_mismatchf <- mean(dat_female_fledging$X5MISMATCH, na.rm = TRUE)
-
-fledging_mismatch_draws_category <- fledging_modelf %>%
-  tidybayes::epred_draws(
-    newdata = expand.grid(
-      # Predict across the range of the Z-scored predictor
-      ZX5MISMATCH = seq(min(dat_female_fledging$ZX5MISMATCH), max(dat_female_fledging$ZX5MISMATCH), length.out = 50),
-      # Hold all other continuous covariates at their mean
-      TIME = mean(dat_female_fledging$TIME),
-      AGE = mean(dat_female_fledging$AGE),
-      AFR = mean(dat_female_fledging$AFR),
-      LONGEVITY = mean(dat_female_fledging$LONGEVITY)
-    ),
-    # Exclude random effects (plotting fixed effect only)
-    re_formula = NA,
-    # Need the dispersion parameter for the category probabilities
-    dpar = TRUE
-  ) %>%
-  # Create a column for the actual, uncentered mismatch value for the plot x-axis
-  dplyr::mutate(
-    actual_mismatch = ZX5MISMATCH + mean_of_original_mismatchf,
-    .category = factor(.category, levels = c("0", "1", "2", "3")) # Ensure categories are factors
-  )
-
-# Preview the data structure
-head(fledging_mismatch_draws_category)
-```
-
-```{r}
-#| eval: false
-fledging_props_mismatchf <- dat_female_fledging %>%
-  dplyr::filter(!is.na(X5MISMATCH)) %>%
-  # Count observations for each category at each exact X5MISMATCH value
-  dplyr::count(X5MISMATCH, FLEDS) %>%
-  # Fill in zero counts for categories that didn't occur
-  tidyr::complete(X5MISMATCH,
-                  # FIX: Use ordered() instead of factor()
-                  FLEDS = ordered(c("0", "1", "2", "3"), levels = c("0", "1", "2", "3")),
-                  fill = list(n = 0)) %>%
-  # Group by the X5MISMATCH value to calculate proportions
-  dplyr::group_by(X5MISMATCH) %>%
-  dplyr::mutate(
-    total_n_mismatch = sum(n),
-    proportion = ifelse(total_n_mismatch > 0, n / total_n_mismatch, 0)
-  ) %>%
-  dplyr::ungroup() %>%
-  # Create a column for the original X5MISMATCH value for the plot x-axis
-  dplyr::rename(ori_mismatch = X5MISMATCH)
-```
-
-```{r}
-#| label: create-fledging-mismatch-categories
-#| message: false
-#| warning: false
-#| eval: false
-# Define a custom color palette for the categories
-category_colors <- c("0" = "#E41A1C", "1" = "#377EB8", "2" = "#4DAF4A", "3" = "#984EA3")
-
-plot_mismatch_categories <- ggplot() +
-  # Use stat_lineribbon for the prediction and uncertainty intervals
-  tidybayes::stat_lineribbon(
-    data = fledging_mismatch_draws_category, 
-    aes(x = actual_mismatch, y = .epred, fill = .category), 
-    .width = 0.95, alpha = 0.7
-  ) +
-  # Add observed data points (optional, but helpful)
-  ggplot2::geom_point(
-    data = fledging_props_mismatchf, 
-    aes(x = ori_mismatch, y = proportion, fill = FLEDS, size = total_n_mismatch),
-    shape = 21, color = "black", alpha = 0.6
-  ) +
-  # Apply the custom color scale
-  ggplot2::scale_fill_manual(values = category_colors, name = "Number of Fledglings:") +
-  # Set up the x and y axes
-  ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.2), limits = c(0, 1)) +
-  ggplot2::scale_x_continuous(breaks = seq(-90, 210, by = 30), limits = c(-90, 210)) +
-  
-  # Labels and Theme
-  ggplot2::labs(
-    title = "",
-    y = "Probability of nest success",
-    x = "Phenological mismatch (days)"
-  ) +
-  # You need to define your custom_theme() function or use a built-in one like theme_classic()
-  # custom_theme(show_legend = TRUE) + 
-  ggplot2::theme_classic() +
-  ggplot2::theme(
-    legend.position = c(0.8, 0.85),
-    legend.title = ggplot2::element_text(size = 8),
-    legend.text = ggplot2::element_text(size = 7)
-  )
-
-print(plot_mismatch_categories)
-```
-
-```{r}
-#| label: create-fledging-mismatch-categories1
-#| message: false
-#| warning: false
-#| eval: false
-category_colors <- c("0" = "#E41A1C", "1" = "#377EB8", "2" = "#4DAF4A", "3" = "#984EA3")
-category_alphas <- c("0" = 0.7, "1" = 0.15, "2" = 0.15, "3" = 0.15)
-
-plot_mismatch_categories <- ggplot2::ggplot() +
-  tidybayes::stat_lineribbon(
-    data = fledging_mismatch_draws_category, 
-    aes(x = actual_mismatch, y = .epred, fill = .category, alpha = .category), 
-    .width = 0.95
-  ) +
-  ggplot2::geom_point(
-    data = fledging_props_mismatchf, 
-    aes(x = ori_mismatch, y = proportion, fill = FLEDS, size = total_n_mismatch, alpha = FLEDS),
-    shape = 21, color = "black"
-  ) +
-  ggplot2::scale_fill_manual(values = category_colors, name = "Number of Fledglings:") +
-  ggplot2::scale_alpha_manual(values = category_alphas, guide = "none") +
-  ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.2), limits = c(0, 1)) +
-  ggplot2::scale_x_continuous(breaks = seq(-90, 210, by = 30), limits = c(-90, 210)) +
-  
-  # Hide the size legend
-  ggplot2::guides(size = "none") +
-  
-  ggplot2::labs(
-    title = "",
-    y = "Probability of nest success",
-    x = "Phenological mismatch (days)"
-  ) +
-  ggplot2::theme_classic() +
-  ggplot2::theme(
-    # CHANGE HERE: c(0.9, 0.6) moves it Right (0.9) and Lower (0.6)
-    legend.position = c(0.9, 0.6), 
-    legend.title = ggplot2::element_text(size = 8),
-    legend.text = ggplot2::element_text(size = 7)
-  )
-
-print(plot_mismatch_categories)
-```
 
 ::: panel-tabset
 ## Females
@@ -1548,13 +1350,26 @@ print(plot_mismatch_categories)
 #| warning: false
 #| eval: false
 
+
 plot_mismatch_prob_altf <- ggplot() + 
-  geom_point(data = fledging_success_propsf, aes(x = X5MISMATCH, y = proportion,size = total_n_year), 
-             shape = 22, alpha = 0.4, stroke = 1, fill = "#9dbcbe", colour = "#a68551") +
-  stat_lineribbon(data = fledging_success_drawsf, aes(x = actual_mismatch, y = prob_success), 
-                  .width = 0.95, alpha = 0.4, fill = "firebrick") +
-  stat_lineribbon(data = fledging_success_drawsf, aes(x = actual_mismatch, y = prob_success), 
-                  fill = NA, color = "black", linewidth = 1) +
+  # 1. Observed Data Points (binned proportions)
+  # Mapped fill to fled_group to see observed 0s vs 1-2s vs 3s
+  geom_point(data = fledging_grouped_propsf, 
+             aes(x = X5MISMATCH, y = proportion, size = total_n_year, fill = fled_group), 
+             shape = 21, alpha = 0.2, stroke = 0.5, color = "black") +
+
+  # 2. Posterior Ribbons (95% CI)
+  stat_lineribbon(data = fledging_grouped_drawsf, 
+                  aes(x = actual_mismatch, y = prob_val, fill = fled_group), 
+                  .width = 0.95, alpha = 0.3, color = NA) +
+
+  # 3. Posterior Mean Lines
+  # We use .width = 0 to draw just the line without another ribbon on top
+  stat_lineribbon(data = fledging_grouped_drawsf, 
+                  aes(x = actual_mismatch, y = prob_val, color = fled_group), 
+                  .width = 0, fill = NA, linewidth = 1) +
+
+  # 4. Scales and Colors
   scale_y_continuous(
     breaks = seq(0, 1, 0.2), 
     minor_breaks = seq(0, 1, 0.1),  
@@ -1567,15 +1382,32 @@ plot_mismatch_prob_altf <- ggplot() +
     limits = c(-90, 210),
     guide = guide_axis(minor.ticks = TRUE) 
   ) +
-
   
+  # Manual colors: Adjust these hex codes to your preference
+  scale_fill_manual(values = c("0" = "#999999", "1-2" = "#E69F00", "3" = "#56B4E9"), name = "Number of fledglings") +
+  scale_color_manual(values = c("0" = "#999999", "1-2" = "#E69F00", "3" = "#56B4E9"), name = "Number of fledglings") +
+
+  # 5. Labels
   labs(
-    subtitle = "\u03B2 = -0.15, 95% CI = [-0.30, -0.07]",
-    y = "Probability of Nest Success",
+    subtitle = "\u03B2 = -0.0003, 95% CI = [-0.0007, -0.0001]",
+    y = "Probability of Fledging Outcomes",
     x = "Phenological mismatch (days)"
   ) +
-  custom_theme()+theme(plot.subtitle = element_text(face="bold"))
-
+  guides(size = "none",
+    # title.position = "left" puts the title next to the keys
+    # nrow = 1 forces all keys to be in one line
+    fill = guide_legend(title.position = "left", nrow = 1),
+    color = guide_legend(title.position = "left", nrow = 1))+
+  custom_theme() + theme(
+    plot.subtitle = element_text(face = "bold", color = "black"),
+    axis.text = element_text(color = "black"),
+    axis.title = element_text(color = "black"),
+    
+    # Move legend to bottom
+    legend.position = "bottom",
+    # Ensure items are not too spaced out
+    legend.spacing.x = unit(0.5, "cm")
+  )
 ```
 
 ## Males
@@ -1585,14 +1417,25 @@ plot_mismatch_prob_altf <- ggplot() +
 #| message: false
 #| warning: false
 #| eval: false
-
 plot_mismatch_prob_altm <- ggplot() + 
-  geom_point(data = fledging_success_propsm, aes(x = X5MISMATCH, y = proportion, size = total_n_year), 
-             shape = 22, alpha = 0.4, stroke = 1, fill = "#9dbcbe", colour = "#a68551") +
-  stat_lineribbon(data = fledging_success_drawsm, aes(x = actual_mismatch, y = prob_success), 
-                  .width = 0.95, alpha = 0.4, fill = "firebrick") +
-  stat_lineribbon(data = fledging_success_drawsm, aes(x = actual_mismatch, y = prob_success), 
-                  fill = NA, color = "black", linewidth = 1) +
+  # 1. Observed Data Points (binned proportions)
+  # Mapped fill to fled_group to see observed 0s vs 1-2s vs 3s
+  geom_point(data = fledging_grouped_propsm, 
+             aes(x = X5MISMATCH, y = proportion, size = total_n_year, fill = fled_group), 
+             shape = 21, alpha = 0.2, stroke = 0.5, color = "black") +
+
+  # 2. Posterior Ribbons (95% CI)
+  stat_lineribbon(data = fledging_grouped_drawsm, 
+                  aes(x = actual_mismatch, y = prob_val, fill = fled_group), 
+                  .width = 0.95, alpha = 0.3, color = NA) +
+
+  # 3. Posterior Mean Lines
+  # We use .width = 0 to draw just the line without another ribbon on top
+  stat_lineribbon(data = fledging_grouped_drawsm, 
+                  aes(x = actual_mismatch, y = prob_val, color = fled_group), 
+                  .width = 0, fill = NA, linewidth = 1) +
+
+  # 4. Scales and Colors
   scale_y_continuous(
     breaks = seq(0, 1, 0.2), 
     minor_breaks = seq(0, 1, 0.1),  
@@ -1605,14 +1448,32 @@ plot_mismatch_prob_altm <- ggplot() +
     limits = c(-90, 210),
     guide = guide_axis(minor.ticks = TRUE) 
   ) +
-
   
+  # Manual colors: Adjust these hex codes to your preference
+  scale_fill_manual(values = c("0" = "#999999", "1-2" = "#E69F00", "3" = "#56B4E9"), name = "Number of fledglings") +
+  scale_color_manual(values = c("0" = "#999999", "1-2" = "#E69F00", "3" = "#56B4E9"), name = "Number of fledglings") +
+
+  # 5. Labels
   labs(
-    subtitle = "\u03B2 = -0.16, 95% CI = [-0.32, -0.07]",
-    y = "Probability of Nest Success",
+    subtitle = "\u03B2 = -0.0002, 95% CI = [-0.0005, -0.0000]",
+    y = "Probability of Fledging Outcomes",
     x = "Phenological mismatch (days)"
   ) +
-  custom_theme()+theme(plot.subtitle = element_text(face="bold"))
+  guides(size = "none",
+    # title.position = "left" puts the title next to the keys
+    # nrow = 1 forces all keys to be in one line
+    fill = guide_legend(title.position = "left", nrow = 1),
+    color = guide_legend(title.position = "left", nrow = 1))+
+  custom_theme() + theme(
+    plot.subtitle = element_text(face = "bold", color = "black"),
+    axis.text = element_text(color = "black"),
+    axis.title = element_text(color = "black"),
+    
+    # Move legend to bottom
+    legend.position = "bottom",
+    # Ensure items are not too spaced out
+    legend.spacing.x = unit(0.5, "cm")
+)
 ```
 :::
 
@@ -1672,11 +1533,11 @@ The assembled figure is then saved as both a PDF and JPG file.
 #| label: save-figure
 #| eval: false
 
-ggsave(filename = here("Plots", "panel_fig3_females.pdf"),
+ggsave(filename = here("..","Plots", "panel_fig3_females.pdf"),
        plot = figure3_female,
        dpi = 300, device = cairo_pdf)
 
-ggsave(filename = here("Plots", "panel_fig3_females.jpg"),
+ggsave(filename = here("..","Plots", "panel_fig3_females.jpg"),
        plot = figure3_female,
        width = 7,  
        height = 9,  
@@ -1685,39 +1546,17 @@ ggsave(filename = here("Plots", "panel_fig3_females.jpg"),
 
 
 
-ggsave(filename = here("Plots", "panel_fig3_males.pdf"),
+ggsave(filename = here("..","Plots", "panel_fig3_males.pdf"),
        plot = figure3_male,
        dpi = 300, device = cairo_pdf)
 
-ggsave(filename = here("Plots", "panel_fig3_males.jpg"),
+ggsave(filename = here("..","Plots", "panel_fig3_males.jpg"),
        plot = figure3_male,
        width = 7,  
        height = 9,  
        dpi = 300)
 
 
-```
-
-```{r}
-
-```
-
-:::
-
-```{r}
-#| label: save-fledging-mismatch-figure
-#| eval: false
-
-# Save the figure to files
-ggsave(filename = here("Plots", "panel_fig_females_fledging_mismatch.pdf"),
-       plot = mismatch_figure,
-       width = 9, height = 7,
-       dpi = 300, device = cairo_pdf)
-
-ggsave(filename = here("Plots", "panel_fig_females_fledging_mismatch.jpg"),
-       plot = mismatch_figure,
-       width = 9, height = 7,
-       dpi = 300)
 ```
 
 ::: {.callout-tip appearance="simple" icon="false"}

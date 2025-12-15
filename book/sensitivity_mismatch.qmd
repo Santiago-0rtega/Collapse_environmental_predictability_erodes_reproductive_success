@@ -22,7 +22,7 @@ Here we compare the results for the 5%, 15%, and 25% mismatch thresholds for fem
 #| size: "footnotesize"
 #| tbl-cap: "Posterior summary for the main phenological mismatch model (5% threshold) for females."
 
-model_female_5 <- readRDS(here::here("Rdata", "female_fit_m8.rds"))
+model_female_5 <- readRDS(here::here("..","Rdata","female_fit_m8.rds"))
 summary(model_female_5)
 ```
 
@@ -34,7 +34,7 @@ summary(model_female_5)
 #| size: "footnotesize"
 #| tbl-cap: "Posterior summary for the sensitivity mismatch model (15% threshold) for females."
 
-model_female_15 <- readRDS(here::here("Rdata", "sensitivity_mismatches", "X15MISMATCH_female_fit_age_slope_sigma_linear.rds"))
+model_female_15 <- readRDS(here::here("..","Rdata","X15MISMATCH_female_fit_age_slope_sigma_linear.rds"))
 summary(model_female_15)
 ```
 
@@ -46,7 +46,7 @@ summary(model_female_15)
 #| size: "footnotesize"
 #| tbl-cap: "Posterior summary for the sensitivity mismatch model (25% threshold) for females."
 
-model_female_25 <- readRDS(here::here("Rdata", "sensitivity_mismatches", "X25MISMATCH_female_fit_age_slope_sigma_linear.rds"))
+model_female_25 <- readRDS(here::here("..","Rdata", "X25MISMATCH_female_fit_age_slope_sigma_linear.rds"))
 summary(model_female_25)
 ```
 :::
@@ -64,7 +64,7 @@ Here we compare the results for the 5%, 15%, and 25% mismatch thresholds for mal
 #| size: "footnotesize"
 #| tbl-cap: "Posterior summary for the main phenological mismatch model (5% threshold) for males."
 
-model_male_5 <- readRDS(here::here("Rdata", "male_fit_m8.rds"))
+model_male_5 <- readRDS(here::here("..","Rdata", "male_fit_m8.rds"))
 summary(model_male_5)
 ```
 
@@ -76,7 +76,7 @@ summary(model_male_5)
 #| size: "footnotesize"
 #| tbl-cap: "Posterior summary for the sensitivity mismatch model (15% threshold) for males."
 
-model_male_15 <- readRDS(here::here("Rdata", "sensitivity_mismatches", "X15MISMATCH_male_fit_age_slope_sigma_linear.rds"))
+model_male_15 <- readRDS(here::here("..","Rdata",  "X15MISMATCH_male_fit_age_slope_sigma_linear.rds"))
 summary(model_male_15)
 ```
 
@@ -88,7 +88,7 @@ summary(model_male_15)
 #| size: "footnotesize"
 #| tbl-cap: "Posterior summary for the sensitivity mismatch model (25% threshold) for males."
 
-model_male_25 <- readRDS(here::here("Rdata", "sensitivity_mismatches", "X25MISMATCH_male_fit_age_slope_sigma_linear.rds"))
+model_male_25 <- readRDS(here::here("..","Rdata", "X25MISMATCH_male_fit_age_slope_sigma_linear.rds"))
 summary(model_male_25)
 ```
 :::
@@ -175,7 +175,7 @@ The workflow is executed for both males and females. For each sex, the data is p
 #| eval: false
 
 # --- Load and Prepare Data for Males ---
-dat_male <- read.csv(here::here("data", "Lay_date_mismatches_250702.csv")) %>%
+dat_male <- read.csv(here::here("..","data", "Lay_date_mismatches_250702.csv")) %>%
   subset(SEX == 0) %>%
   mutate(
     across(c(X15MISMATCH, X25MISMATCH, AGE, AFR, LONGEVITY), as.numeric),
@@ -199,7 +199,7 @@ run_mismatch_sensitivity(data = dat_male, response_var = "X25MISMATCH", sex = "m
 #| eval: false
 
 # --- Load and Prepare Data for Females ---
-dat_female <- read.csv(here::here("data", "Lay_date_mismatches_250702.csv")) %>%
+dat_female <- read.csv(here::here("..","data", "Lay_date_mismatches_250702.csv")) %>%
   subset(SEX == 1) %>%
   mutate(
     across(c(X15MISMATCH, X25MISMATCH, AGE, AFR, LONGEVITY), as.numeric),

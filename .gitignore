@@ -1,4 +1,26 @@
+# --- System & IDE ---
+.DS_Store
 .Rproj.user
-.Rhistory
-.RData
-.Ruserdata
+__pycache__/
+.ipynb_checkpoints/
+
+# --- Quarto Internals ---
+# Ignore cache from root and book folder
+/.quarto/
+/book/.quarto/
+
+
+/book/_freeze/
+/book/_files/
+
+# --- Outputs to Ignore ---
+*.pdf
+*.html
+
+
+# --- Data & Large Files ---
+# Block these file types wherever they appear in the repo
+*.rds
+*.RData
+
+

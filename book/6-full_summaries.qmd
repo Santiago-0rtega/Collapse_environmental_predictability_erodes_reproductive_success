@@ -42,7 +42,7 @@ This section presents the posterior summaries for the best-supported models from
 
 
 # Load the model
-model_bloom <- readRDS(here::here("Rdata", "model_delta5.rds"))
+model_bloom <- readRDS(here::here("..","Rdata", "model_delta5.rds"))
 
 # Print the full model summary
 summary(model_bloom)
@@ -62,7 +62,7 @@ summary(model_bloom)
 
 
 # Load the model
-model_pm_female_best <- readRDS(here::here("Rdata", "female_fit_m8.rds"))
+model_pm_female_best <- readRDS(here::here("..","Rdata", "female_fit_m8.rds"))
 
 # Print the full model summary
 summary(model_pm_female_best)
@@ -78,10 +78,10 @@ summary(model_pm_female_best)
 
 
 # Load the model
-model_fs_female_best <- readRDS(here::here("Rdata", "female_fit_Q17.rds"))
+model_fs_female_best <- readRDS(here::here("..","Rdata", "female_fit_Q17.rds"))
 
 # Print the full model summary
-summary(model_fs_female_best)
+print(summary(model_fs_female_best), digits =4)
 ```
 :::
 
@@ -97,7 +97,7 @@ summary(model_fs_female_best)
 
 
 # Load the model
-model_pm_male_best <- readRDS(here::here("Rdata", "male_fit_m8.rds"))
+model_pm_male_best <- readRDS(here::here("..","Rdata", "male_fit_m8.rds"))
 
 # Print the full model summary
 summary(model_pm_male_best)
@@ -112,10 +112,10 @@ summary(model_pm_male_best)
 
 
 # Load the model
-model_fs_male_best <- readRDS(here::here("Rdata", "male_fit_Q17.rds"))
+model_fs_male_best <- readRDS(here::here("..","Rdata", "male_fit_Q17.rds"))
 
 # Print the full model summary
-summary(model_fs_male_best)
+print(summary(model_fs_male_best),digits=4)
 ```
 :::
 :::::

@@ -78,7 +78,7 @@ Bloom onset dates were converted into days since the previous winter solstice
 ```{r}
 #| label: bloom-data
 #| evalve: false
-dat<-read.csv(here("data","bloom_dates.csv"))
+dat<-read.csv(here("..","data","bloom_dates.csv"))
 dat <- dat %>%
   mutate(
     # Convert dates
@@ -190,7 +190,7 @@ Before fitting the models, the primary dataset was loaded and pre-processed. Sep
 
 ```{r}
 #| label: Data preparation females
-dat <- read.csv(here("data", "Lay_date_mismatches_250702.csv")) %>%
+dat <- read.csv(here("..","data", "Lay_date_mismatches_250702.csv")) %>%
   subset(SEX == 1) %>%
   mutate(
     # First, ensure columns that will be used for scaling are numeric
@@ -217,7 +217,7 @@ dat <- read.csv(here("data", "Lay_date_mismatches_250702.csv")) %>%
 
 ```{r}
 #| label: Data preparation male
-dat0 <- read.csv(here("data", "Lay_date_mismatches_250702.csv")) %>%
+dat0 <- read.csv(here("..","data", "Lay_date_mismatches_250702.csv")) %>%
   subset(SEX ==0) %>%
   mutate(
     across(c(X5MISMATCH, AGE, AFR, LONGEVITY), as.numeric),

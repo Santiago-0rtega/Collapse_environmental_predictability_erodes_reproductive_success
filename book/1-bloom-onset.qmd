@@ -122,11 +122,11 @@ mapIS
 ```
 
 ```{r}
-ggsave(filename = here("Plots", "Map_Isla_Isabel.pdf"),
+ggsave(filename = here("..","Plots", "Map_Isla_Isabel.pdf"),
        plot = mapIS,
        dpi = 300, device = cairo_pdf)
 
-ggsave(filename = here("Plots", "Map_Isla_Isabel.jpg"),
+ggsave(filename = here("..","Plots", "Map_Isla_Isabel.jpg"),
        plot = mapIS,
        width = 7,  
        height = 7,  
@@ -148,7 +148,7 @@ The chlorophyll-a data is loaded from a CSV file. The data is cleaned by removin
 
 ```{r}
 #| label: chlorophyll data
-CHL_df <- read.csv(here("data", "MODIS.CHL.R2022.csv"), header = TRUE) %>%
+CHL_df <- read.csv(here("..","data", "MODIS.CHL.R2022.csv"), header = TRUE) %>%
   drop_na() %>%
   dplyr::select(date, chlorophyll) %>%
   rename(daily_value = chlorophyll)
@@ -606,11 +606,11 @@ print(combined_plot)
 ```
 
 ```{r}
-ggsave(filename = here("Plots", "bloom_thresholds.pdf"),
+ggsave(filename = here("..","Plots", "bloom_thresholds.pdf"),
        plot = combined_plot,
        dpi = 300, device = cairo_pdf)
 
-ggsave(filename = here("Plots", "bloom_thresholds.jpg"),
+ggsave(filename = here("..","Plots", "bloom_thresholds.jpg"),
        plot = combined_plot,
        width = 7,  
        height = 7,  

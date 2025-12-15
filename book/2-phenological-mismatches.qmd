@@ -28,7 +28,7 @@ Phenological mismatches were visualized as density distributions. Each panel cor
 ```{r}
 #| label: Plot pheno mismatch
 #| code-fold: true
-dat <- read.csv(here::here("data", "Lay_date_mismatches_250702.csv"))
+dat <- read.csv(here::here("..","data", "Lay_date_mismatches_250702.csv"))
 
 
 # 1. Prepare 'Winter to Spring' data
@@ -133,11 +133,11 @@ print(mismatch_plot)
 ```
 
 ```{r}
-ggsave(filename = here("Plots", "mismatch_thresholds.pdf"),
+ggsave(filename = here("..","Plots", "mismatch_thresholds.pdf"),
        plot = mismatch_plot,
        dpi = 300, device = cairo_pdf)
 
-ggsave(filename = here("Plots", "mismatch_thresholds.jpg"),
+ggsave(filename = here("..","Plots", "mismatch_thresholds.jpg"),
        plot = mismatch_plot,
        width = 9,  
        height = 7,  

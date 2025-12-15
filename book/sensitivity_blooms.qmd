@@ -19,7 +19,7 @@ pacman::p_load(
 ```{r}
 #| label: summary-5pct
 #| eval: true
-summary(readRDS(here("Rdata","model_delta5.rds")))
+summary(readRDS(here("..","Rdata","model_delta5.rds")))
 ```
 
 ## 15% Threshold
@@ -27,7 +27,7 @@ summary(readRDS(here("Rdata","model_delta5.rds")))
 ```{r}
 #| label: summary-15pct
 #| eval: true
-summary(readRDS(here("Rdata","model_delta15.rds")))
+summary(readRDS(here("..","Rdata","model_delta15.rds")))
 ```
 
 ## 25% Threshold
@@ -35,7 +35,7 @@ summary(readRDS(here("Rdata","model_delta15.rds")))
 ```{r}
 #| label: summary-25pct
 #| eval: true
-summary(readRDS(here("Rdata","model_delta25.rds")))
+summary(readRDS(here("..","Rdata","model_delta25.rds")))
 ```
 :::
 
@@ -54,7 +54,7 @@ plan(multisession, workers=4)
 ```{r}
 #| label: data-transformation
 #| eval: false
-dat<-read.csv(here("data","bloom_dates.csv"))
+dat<-read.csv(here("..","data","bloom_dates.csv"))
 dat <- dat %>%
   mutate(
     # --- Date Calculations ---
