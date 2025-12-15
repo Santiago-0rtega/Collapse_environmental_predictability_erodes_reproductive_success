@@ -1,4 +1,4 @@
-﻿Model,Location effects,Random effects
+﻿Model,Location_submodel,Scale_submodel
 m1,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1|ID) + (1|Year),NA
 m2,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Age|ID) + (1|Year),NA
 m3,Age + I(Age^2) + Time + Age of first reproduction + Age at last reproduction + (1 + Time|ID) + (1|Year),NA

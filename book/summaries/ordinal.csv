@@ -1,4 +1,4 @@
-﻿Model,Location effects,Random effects
+﻿Model,Location_submodel,Scale_submodel
 m1,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1|ID) + (1|Year),1
 m2,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Age|ID) + (1|Year),1
 m3,Phenological mismatch + Time + Age + I(Age^2) + Age at first reproduction + Age at last reproduction + (1 + Time|ID) + (1|Year),1
