@@ -3,7 +3,7 @@ project:
   output-dir: ../docs
 
 book:
-  title: "Climate-driven variablity in phenological mismatch undermines reproductive success in a Tropical apex predator"
+  title: "The collapse of environmental predictability erodes reproductive success in a Tropical seabird"
   title-short: "Phenological Mismatch in a Tropical Predator"
   author:
     - name: Santiago Ortega
