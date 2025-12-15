@@ -15,7 +15,7 @@ __pycache__/
 
 # --- Outputs to Ignore ---
 *.pdf
-*.html
+
 
 
 # --- Data & Large Files ---
