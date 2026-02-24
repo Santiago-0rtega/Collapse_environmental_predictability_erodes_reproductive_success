@@ -27,7 +27,6 @@ book:
         - 2-phenological-mismatches.qmd
         - 3-model-fitting.qmd
         - 4-diagnostics.qmd
-        - 5-Model_comparison.qmd
         - 6-full_summaries.qmd
     - part: "Appendices"
       chapters:

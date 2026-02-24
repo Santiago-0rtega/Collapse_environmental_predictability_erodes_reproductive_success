@@ -11,7 +11,7 @@ Main analyses
 
 - S1. Chlorophyll-a bloom detection
 
-- S2. Phenological mismatches
+- S2. Phenological mismatch
 
 - S3. Model fitting workflow
 
