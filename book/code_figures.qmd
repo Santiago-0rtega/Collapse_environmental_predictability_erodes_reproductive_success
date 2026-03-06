@@ -1,14 +1,22 @@
 ---
 title: "Code for figures"
+subtitle: "Reproducible workflow for generating the main visualizations"
+unnumbered: true
+toc: true
+toc-depth: 2
 ---
 
-# Setup and Data Preparation
+::: lead
+This appendix provides the code used to generate the main figures in the manuscript. It includes setup, data preparation, model-based prediction workflows, plot construction, and export code for the final multi-panel figures.
+:::
 
-This first set of chunks loads all the necessary R packages for data manipulation, modeling, and plotting. It also defines a custom ggplot2 theme and a reusable x-axis scale to ensure all plots have a consistent aesthetic.
+::: {.callout-note appearance="simple"}
+Most chunks are included as a reproducible workflow record and are not executed during rendering of the website.
+:::
 
 ```{r}
 #| label: setup-pheno_results
-#| eval: true
+#| include: false
 
 pacman::p_load(MASS, 
                dplyr,
@@ -24,10 +32,18 @@ pacman::p_load(MASS,
                bayesplot ,cmdstanr, extrafont, ggtext)
 ```
 
-This chunk defines a custom plotting theme, custom_theme(), which builds upon theme_economist_white to create a clean, consistent aesthetic for all figures.
+## Plotting utilities
+
+This section defines reusable plotting objects to ensure a consistent visual style across figures.
+
+### Custom theme
 
 ```{r}
+#| label: custom-theme
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show custom plotting theme"
+#| 
 custom_theme <- function(show_legend = FALSE) {
   # Set legend position string
   legend_pos <- if (show_legend) "bottom" else "none"
@@ -65,11 +81,13 @@ custom_theme <- function(show_legend = FALSE) {
 }
 ```
 
-This creates a standardized x-axis scale for years, ensuring labels and breaks are uniform across time-series plots.
+### Shared x-axis scale
 
 ```{r}
-#| label: x-axis-scale
+#| label: shared-x-axis-scale
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show shared x-axis scale"
 
 # Create a reusable x-axis scale for all plots
 my_x_scale <- scale_x_continuous(
@@ -85,16 +103,18 @@ my_x_scale <- scale_x_continuous(
 )
 ```
 
-Data and pre-trained models are loaded from their respective files. This includes data on bloom onset, laying dates, and fledgling success.
+## Load data and fitted models
+
+Data and pre-trained models were loaded from project files prior to figure generation.
 
 ::: panel-tabset
 ## Bloom onset
 
 ```{r}
-#| label: load-data-and-models
-#| message: false
-#| warning: false
+#| label: load-bloom-data-model
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show bloom data and model loading"
 
 bloom_dat_raw <- read.csv(here("..","data", "bloom_dates.csv"))
 bloom_model <- readRDS(here("..","Rdata", "model_delta5.rds"))
@@ -104,10 +124,10 @@ bloom_model <- readRDS(here("..","Rdata", "model_delta5.rds"))
 ## Females
 
 ```{r}
-#| label: load-data-and-models-females
-#| message: false
-#| warning: false
+#| label: load-female-data-models
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show female data and model loading"
 
 female_dat_raw <- read.csv(here("..","data", "Lay_date_mismatches_250702.csv"))
 mismatch_modelf <- readRDS(here("..","Rdata", "female_fit_m11.rds"))
@@ -117,10 +137,10 @@ fledging_modelf <- readRDS(here("..","Rdata", "female_fit_Q17.rds"))
 ## Males
 
 ```{r}
-#| label: load-data-and-models-males
-#| message: false
-#| warning: false
+#| label: load-male-data-models
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show male data and model loading"
 
 
 male_dat_raw <- read.csv(here("..","data", "Lay_date_mismatches_250702.csv"))
@@ -129,13 +149,17 @@ fledging_modelm <- readRDS(here("..","Rdata", "male_fit_Q17.rds"))
 ```
 :::
 
-This chunk preprocesses the raw data. It calculates key variables (like delta5 for bloom timing), scales predictors for the models (like TIME and AGE), and ensures data types are correct for analysis.
+## Data preprocessing
+
+Raw data were transformed to create the variables used for plotting and model-based prediction.
+
+### Bloom timing data
 
 ```{r}
-#| label: data-preprocessing-bloom
-#| message: false
-#| warning: false
+#| label: preprocess-bloom-data
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show bloom preprocessing"
 
 # --- Process Bloom Data ---
 bloom_dat <- bloom_dat_raw %>%
@@ -152,10 +176,11 @@ bloom_dat <- bloom_dat_raw %>%
 ## Females
 
 ```{r}
-#| label: data-preprocessing-females
-#| message: false
-#| warning: false
+#| label: preprocess-female-data
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show female preprocessing"
+
 
 
 # --- Process Female Mismatch & Fledging Data ---
@@ -189,10 +214,10 @@ dat_female_fledging <- female_dat_raw %>%
 ## Males
 
 ```{r}
-#| label: data-preprocessing-males
-#| message: false
-#| warning: false
+#| label: preprocess-male-data
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show male preprocessing"
 
 dat_male_mismatch <- male_dat_raw %>%
   filter(SEX == 0) %>%
@@ -223,15 +248,15 @@ dat_male_fledging <- male_dat_raw %>%
 
 # Figure 2: Temporal Trends in Phenology and Fitness
 
-This series of plots examines how bloom timing, laying date mismatch, and fledgling success for female/male blue-footed boobies have changed over time.
+This figure summarizes temporal trends in bloom timing, phenological mismatch, and fledging success.
 
-First, model predictions are generated for bloom onset timing (.epred) and its variability (sigma) across the study years.
+## Bloom timing predictions
 
 ```{r}
-#| label: figure-2-predictions-bloom
-#| message: false
-#| warning: false
+#| label: figure2-bloom-predictions
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show bloom prediction code"
 
 # --- Panel A-B: Bloom onset mean and predictability over time ---
 mean_bloom_year <- mean(bloom_dat$season_year)
@@ -244,17 +269,17 @@ bloom_time_draws <- bloom_model %>%
   mutate(actual_year = TIME + mean_bloom_year)
 ```
 
-The next two chunks create Plot A (mean bloom onset) and Plot B (predictability of bloom onset).
+## Bloom timing panels
 
 ```{r}
-#| label: figure2-plot-A
-#| message: false
-#| warning: false
+#| label: figure2-bloom-panels
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show bloom timing panel code"
 
 # Create plot A
 plot_A <- ggplot(bloom_dat, aes(x = season_year, y = delta5)) +
-geom_point(shape = 25, stroke = 1, fill = "#bcd2b1",
+geom_point(shape = 21, stroke = 1, fill = "#bcd2b1",
              colour = "#675d76", size = 2, alpha = 0.8) +
   stat_lineribbon(data = bloom_time_draws, aes(x = actual_year, y = .epred), 
                   .width = 0.95, alpha = 0.4, fill = "#6a795a") +
@@ -290,7 +315,7 @@ dat_with_residuals_bloom <- bloom_dat%>%
 #| eval: false
 
 plot_B <- ggplot(dat_with_residuals_bloom, aes(x =season_year , y = raw_sigma))+
-  geom_point(shape = 25, stroke = 1, fill = "#69666d",
+  geom_point(shape = 21, stroke = 1, fill = "#69666d",
              colour = "#6a795a", size = 2, alpha = 0.8) +
   stat_lineribbon(data = bloom_time_draws, aes(x = actual_year, y = sigma), 
                   .width = 0.95, alpha = 0.4, fill = "#675d76") +
@@ -485,7 +510,7 @@ plot_Dm <- ggplot() +geom_jitter(data = dat_count_sigma_year_male,
 Next, predictions are generated for fledgling success over time. This includes the probability of each outcome (.epred) and the consistency (disc).
 
 ::: panel-tabset
-##Females
+## Females
 
 ```{r}
 #| label: figure-2-predictions-fledging-females
@@ -615,7 +640,7 @@ The next two chunks create Plot E (probability of different fledgling numbers ov
 plot_E <- ggplot() +
   geom_point(data = fledging_success_props_timef, 
              aes(x = ori_time, y = proportion,size=total_n_year), 
-             shape = 22, alpha = 0.4, stroke=1, fill = "#9dbcbe", colour = "#a68551")+
+             shape = 21, alpha = 0.4, stroke=1, fill = "#9dbcbe", colour = "#a68551")+
   # Plot posterior ribbon for success
   stat_lineribbon(data = fledging_success_drawsf, aes(x = actual_time, y = prob_success), 
                   .width = 0.95, alpha = 0.4, fill = "#5172a6") + 
@@ -625,7 +650,7 @@ plot_E <- ggplot() +
   scale_y_continuous(breaks = seq(0, 1, 0.2), minor_breaks = seq(0,1,0.1),limits = c(0, 1),guide = guide_axis(minor.ticks = TRUE)) +
   labs(
     subtitle = "\u03B2 = -0.419, 95% CI = [-1.073, -0.034]",
-    y = "Probability of Nest Success",
+    y = "Probability of nest success",
     x = NULL
   ) +
   custom_theme()+theme(plot.subtitle = element_text(face="bold"))
@@ -657,7 +682,7 @@ plot_F <- ggplot(fledging_time_drawsf, aes(x = actual_time, y = disc)) +
 plot_Em <- ggplot() +
   geom_point(data = fledging_success_props_timem, 
              aes(x = ori_time, y = proportion, size=total_n_year), 
-             shape = 22, alpha = 0.4, stroke=1, fill = "#9dbcbe", colour = "#a68551")+
+             shape = 21, alpha = 0.4, stroke=1, fill = "#9dbcbe", colour = "#a68551")+
   # Plot posterior ribbon for success
   stat_lineribbon(data = fledging_success_drawsm, aes(x = actual_time, y = prob_success), 
                   .width = 0.95, alpha = 0.4, fill = "#5172a6") + 
@@ -667,7 +692,7 @@ plot_Em <- ggplot() +
   scale_y_continuous(breaks = seq(0, 1, 0.2), minor_breaks = seq(0,1,0.1), limits = c(0, 1),guide = guide_axis(minor.ticks = TRUE)) +
   labs(
     subtitle = "\u03B2 = -0.483, 95% CI = [-1.246, -0.066]",
-    y = "Probability of Nest Success",
+    y = "Probability of nest success",
     x = NULL
   ) +
   custom_theme()+theme(plot.subtitle = element_text(face="bold"))
@@ -747,7 +772,8 @@ The assembled figure is then saved as both a PDF and JPG file.
 #| eval: false
 
 ggsave(filename = here("..","Plots", "panel_fig2_females_time.pdf"),
-       plot = figure2_female,
+       plot = figure2_female,width = 7,  
+       height = 9,
        dpi = 300, device = cairo_pdf)
 
 ggsave(filename = here("..","Plots", "panel_fig2_females_time.jpg"),
@@ -760,7 +786,8 @@ ggsave(filename = here("..","Plots", "panel_fig2_females_time.jpg"),
 
 
 ggsave(filename = here("..","Plots", "panel_fig2_males_time.pdf"),
-       plot = figure2_male,
+       plot = figure2_male,width = 7,  
+       height = 7, 
        dpi = 300, device = cairo_pdf)
 
 ggsave(filename = here("..","Plots", "panel_fig2_males_time.jpg"),
@@ -774,9 +801,7 @@ ggsave(filename = here("..","Plots", "panel_fig2_males_time.jpg"),
 
 # Figure 3: The Effect of Female/males Age
 
-This figure investigates how a birds's age influences its phenological mismatch and fledgling success.
-
-Predictions are generated from the mismatch model across the range of observed bird ages.
+This figure summarizes age-related patterns in phenological mismatch and fledging success, together with the association between mismatch and fledging outcomes.
 
 ::: panel-tabset
 ## Females
@@ -920,14 +945,14 @@ plot_G <- ggplot() +
              shape = 21, alpha = 0.2, color = "#9096b1", fill = "#d2bfb8") +
   stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = .epred),
                   .width = 0.95, alpha = 0.4, fill = "#a0786e") +
-  geom_line(data = individual_predictions_female, aes(x = actual_age, y = .value, group = RING),
-            color = "#D95F02", linewidth = 0.5, alpha = 0.6)+
+  #geom_line(data = individual_predictions_female, aes(x = actual_age, y = .value, group = RING),
+            #color = "#D95F02", linewidth = 0.5, alpha = 0.6)+
   stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = .epred),
                   fill = NA, color = "black", linewidth = 1) +
   scale_x_continuous(breaks = seq(1, 23, 2),limits = c(1,23),guide = guide_axis(minor.ticks = TRUE)) +
   scale_y_continuous(breaks = seq(-90, 210, 30),minor_breaks = seq(-90,210,15), limits = c(-90, 210),guide = guide_axis(minor.ticks = TRUE)) +
   labs(
-    subtitle = "\u03B2 = 0.334, 95% CI = [0.291, 0.377]\n \U03C1 = 0.454, 95% CI = [0.180, 0.729]",
+    subtitle = "\u03B2 = 0.334, 95% CI = [0.291, 0.377]",
     y = "Phenological mismatch (days)",
     x = "Age (years)"
   ) +
@@ -966,14 +991,14 @@ plot_Gm <- ggplot() +
              shape = 21, alpha = 0.2, color = "#9096b1", fill = "#d2bfb8") +
   stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = .epred),
                   .width = 0.95, alpha = 0.4, fill = "#a0786e") +
-  geom_line(data = individual_predictions_female, aes(x = actual_age, y = .value, group = RING),
-            color = "#D95F02", linewidth = 0.5, alpha = 0.6)+
-  stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = .epred),
+ # geom_line(data = individual_predictions_female, aes(x = actual_age, y = .value, group = RING),
+  #          color = "#D95F02", linewidth = 0.5, alpha = 0.6)+
+  stat_lineribbon(data = age_draws_male, aes(x = actual_age, y = .epred),
                   fill = NA, color = "black", linewidth = 1) +
   scale_x_continuous(breaks = seq(1, 23, 2),limits = c(1,23),guide = guide_axis(minor.ticks = TRUE)) +
   scale_y_continuous(breaks = seq(-90, 210, 30),minor_breaks = seq(-90,210,15), limits = c(-90, 210),guide = guide_axis(minor.ticks = TRUE)) +
   labs(
-    subtitle = "\u03B2 = 0.283, 95% CI = [0.235, 0.332]\n \U03C1 = 0.522, 95% CI = [0.250, 0.759]",
+    subtitle = "\u03B2 = 0.283, 95% CI = [0.235, 0.332]",
     y = "Phenological mismatch (days)",
     x = "Age (years)"
   ) +
@@ -983,9 +1008,9 @@ plot_Gm <- ggplot() +
 # --- Panel H: Consistency vs. Age ---
 plot_Hm <- ggplot() +
   geom_jitter(data = dat_count_sigma_age_male, aes(x = ori_age, y = raw_sigma), width = 0.2, height = 0, shape = 21, alpha = 0.2,stroke=0.1, fill = "#b1ab90", colour = "#b8cbd2",size=1) +
-  stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = sigma),
+  stat_lineribbon(data = age_draws_male, aes(x = actual_age, y = sigma),
                   .width = 0.95, alpha = 0.4, fill = "#cbba62") +
-  stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = sigma),
+  stat_lineribbon(data = age_draws_male, aes(x = actual_age, y = sigma),
                   fill = NA, color = "black", linewidth = 1) +
   scale_x_continuous(breaks = seq(1, 23, 2),limits = c(1,23),guide = guide_axis(minor.ticks = TRUE)) +
   scale_y_continuous(breaks = seq(0, 150, 30), limits = c(0, 150),guide = guide_axis(minor.ticks = TRUE)) +
@@ -1110,7 +1135,7 @@ plot_fledging_success_age <- ggplot() +
 
   geom_point(data = fledging_success_props_agef, 
              aes(x = ori_age, y = proportion,size=total_n_year), 
-             shape = 22, alpha = 0.4, stroke = 1, fill = "#9dbcbe", colour = "#a68551") +
+             shape = 21, alpha = 0.4, stroke = 1, fill = "#9dbcbe", colour = "#a68551") +
   stat_lineribbon(data = fledging_success_draws_agef, 
                   aes(x = actual_age, y = prob_success), 
                   .width = 0.95, alpha = 0.4, fill = "#5172a6") + 
@@ -1133,7 +1158,7 @@ plot_fledging_success_age <- ggplot() +
 
   labs(
     subtitle = "\u03B2 = -0.075, 95% CI = [-0.156, -0.031]",
-    y = "Probability of Nest Success",
+    y = "Probability of nest success",
     x = "Age (years)"
   ) +
 
@@ -1154,7 +1179,7 @@ plot_fledging_success_agem <- ggplot() +
 
   geom_point(data = fledging_success_props_agem, 
              aes(x = ori_age, y = proportion, size=total_n_year), 
-             shape = 22, alpha = 0.4, stroke = 1, fill = "#9dbcbe", colour = "#a68551") +
+             shape = 21, alpha = 0.4, stroke = 1, fill = "#9dbcbe", colour = "#a68551") +
   stat_lineribbon(data = fledging_success_draws_agem, 
                   aes(x = actual_age, y = prob_success), 
                   .width = 0.95, alpha = 0.4, fill = "#5172a6") + 
@@ -1177,7 +1202,7 @@ plot_fledging_success_agem <- ggplot() +
 
   labs(
     subtitle = "\u03B2 = -0.039, 95% CI = [-0.088, -0.014]",
-    y = "Probability of Nest Success",
+    y = "Probability of nest success",
     x = "Age (years)"
   ) +
   
@@ -1390,7 +1415,7 @@ plot_mismatch_prob_altf <- ggplot() +
   # 5. Labels
   labs(
     subtitle = "\u03B2 = -0.0003, 95% CI = [-0.0007, -0.0001]",
-    y = "Probability of Fledging Outcomes",
+    y = "Probability of fledging outcomes",
     x = "Phenological mismatch (days)"
   ) +
   guides(size = "none",
@@ -1456,7 +1481,7 @@ plot_mismatch_prob_altm <- ggplot() +
   # 5. Labels
   labs(
     subtitle = "\u03B2 = -0.0002, 95% CI = [-0.0005, -0.0000]",
-    y = "Probability of Fledging Outcomes",
+    y = "Probability of fledging outcomes",
     x = "Phenological mismatch (days)"
   ) +
   guides(size = "none",
@@ -1515,8 +1540,6 @@ figure3_male <- (plot_Gm | plot_Hm) /
 figure3_male
 ```
 
-
-
 The assembled figure is then saved as both a PDF and JPG file.
 
 ```{r}
@@ -1524,7 +1547,8 @@ The assembled figure is then saved as both a PDF and JPG file.
 #| eval: false
 
 ggsave(filename = here("..","Plots", "panel_fig3_females.pdf"),
-       plot = figure3_female,
+       plot = figure3_female, width = 7,  
+       height = 9, 
        dpi = 300, device = cairo_pdf)
 
 ggsave(filename = here("..","Plots", "panel_fig3_females.jpg"),
@@ -1541,7 +1565,7 @@ ggsave(filename = here("..","Plots", "panel_fig3_males.pdf"),
        dpi = 300, device = cairo_pdf)
 
 ggsave(filename = here("..","Plots", "panel_fig3_males.jpg"),
-       plot = figure3_male,
+       plot = figure3_male, 
        width = 7,  
        height = 9,  
        dpi = 300)

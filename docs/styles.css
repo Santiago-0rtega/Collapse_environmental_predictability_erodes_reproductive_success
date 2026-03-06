@@ -1,41 +1,346 @@
+/* =========================
+   ROOT VARIABLES
+========================= */
 :root {
+  --bfb-deep: #123b4a;
+  --bfb-ocean: #1f5c73;
+  --bfb-sea: #2d7d8c;
+  --bfb-light: #eaf4f6;
+  --bfb-sand: #f7f4ee;
+  --bfb-accent: #d88c3a;
+  --bfb-text: #24343b;
+  --bfb-muted: #5f727a;
+  --bfb-border: #d7e3e8;
+  --bfb-shadow: 0 10px 30px rgba(18, 59, 74, 0.08);
+  --bfb-radius: 14px;
+}
 
-} 
+/* =========================
+   GLOBAL
+========================= */
+body {
+  color: var(--bfb-text);
+  background-color: #fcfcfb;
+  text-rendering: optimizeLegibility;
+}
 
+main.content {
+  padding-top: 1.5rem;
+}
 
+a {
+  color: var(--bfb-ocean);
+  text-decoration: none;
+}
 
-/* --- code blocks --- */
-pre {
+a:hover {
+  color: var(--bfb-accent);
+  text-decoration: underline;
+}
+
+/* =========================
+   TYPOGRAPHY
+========================= */
+h1, h2, h3, h4 {
+  color: var(--bfb-deep);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+h1.title {
+  font-size: 2.5rem;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.15rem;
+  color: var(--bfb-muted);
+  margin-top: 0.25rem;
+}
+
+h2 {
+  margin-top: 2.2rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid rgba(31, 92, 115, 0.08);
+}
+
+h3 {
+  margin-top: 1.6rem;
+}
+
+p {
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.lead {
+  font-size: 1.18rem;
+  color: var(--bfb-muted);
+  max-width: 950px;
+}
+
+/* =========================
+   NAVBAR
+========================= */
+.navbar {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-bottom: 1px solid rgba(18, 59, 74, 0.08);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+}
+
+.navbar-title {
+  font-weight: 700;
+  color: var(--bfb-deep) !important;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+.sidebar {
+  border-right: 1px solid rgba(18, 59, 74, 0.08);
+}
+
+.sidebar-navigation .sidebar-item-text {
+  font-size: 0.98rem;
+}
+
+.sidebar nav[role="doc-toc"] ul > li > a,
+.sidebar .sidebar-item a {
+  border-radius: 8px;
+  padding: 0.25rem 0.5rem;
+}
+
+.sidebar nav[role="doc-toc"] ul > li > a:hover,
+.sidebar .sidebar-item a:hover {
+  background-color: var(--bfb-light);
+  text-decoration: none;
+}
+
+.sidebar-item-container .active,
+.sidebar nav[role="doc-toc"] .active {
+  background-color: rgba(45, 125, 140, 0.12);
+  color: var(--bfb-deep) !important;
+  font-weight: 600;
+  border-left: 3px solid var(--bfb-sea);
+}
+
+/* =========================
+   TITLE BLOCK
+========================= */
+.quarto-title-banner {
+  background:
+    linear-gradient(135deg, rgba(18,59,74,0.95), rgba(31,92,115,0.88)),
+    url("images/Sula.JPG") center/cover no-repeat;
+  color: white;
+  padding-top: 5rem;
+  padding-bottom: 4rem;
+  margin-bottom: 2rem;
+}
+
+.quarto-title-banner h1,
+.quarto-title-banner .title,
+.quarto-title-banner .subtitle,
+.quarto-title-banner .quarto-categories,
+.quarto-title-banner .author,
+.quarto-title-banner .date {
+  color: white !important;
+}
+
+.quarto-title-meta-heading {
+  color: rgba(255,255,255,0.85) !important;
+}
+
+/* =========================
+   FIGURES
+========================= */
+.figure {
+  margin-top: 1.5rem;
+  margin-bottom: 1.8rem;
+}
+
+.figure img {
   border-radius: 12px;
-  padding: 0.9rem 1.0rem;
+  box-shadow: var(--bfb-shadow);
+}
+
+figcaption,
+.figure-caption {
+  color: var(--bfb-muted);
+  font-size: 0.93rem;
+  margin-top: 0.75rem;
+  line-height: 1.5;
+}
+
+/* =========================
+   TABLES
+========================= */
+.table {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--bfb-shadow);
+  background: white;
+}
+
+table {
+  font-size: 0.96rem;
+}
+
+thead {
+  background-color: var(--bfb-light);
+}
+
+/* =========================
+   CODE
+========================= */
+pre, code {
+  border-radius: 10px;
+}
+
+div.sourceCode,
+pre.sourceCode {
+  border: 1px solid var(--bfb-border);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.03);
 }
 
 code {
-  border-radius: 6px;
+  color: var(--bfb-ocean);
+  background-color: rgba(31, 92, 115, 0.06);
+  padding: 0.15rem 0.35rem;
 }
 
-/* --- Callouts a bit cleaner --- */
+/* =========================
+   CALLOUTS
+========================= */
 .callout {
-  border-radius: 14px;
+  border: none !important;
+  border-left: 5px solid var(--bfb-sea) !important;
+  border-radius: var(--bfb-radius) !important;
+  background-color: #ffffff;
+  box-shadow: var(--bfb-shadow);
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
-/* --- cards --- */
-.card {
-  border: 1px solid rgba(120,120,120,0.25);
+.callout.callout-note {
+  border-left-color: var(--bfb-sea) !important;
+}
+
+.callout.callout-tip {
+  border-left-color: #4d8f5e !important;
+}
+
+.callout.callout-important {
+  border-left-color: var(--bfb-accent) !important;
+}
+
+.callout .callout-title-container {
+  font-weight: 700;
+  color: var(--bfb-deep);
+}
+
+/* =========================
+   BLOCKQUOTES
+========================= */
+blockquote {
+  border-left: 4px solid var(--bfb-accent);
+  background: #fffaf5;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  color: #5b4a37;
+}
+
+/* =========================
+   BUTTONS / LISTING LINKS
+========================= */
+.btn, .quarto-btn {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* =========================
+   HOME PAGE CARDS
+========================= */
+.grid-card {
+  background: white;
+  border: 1px solid rgba(18, 59, 74, 0.08);
   border-radius: 16px;
-  padding: 1.1rem 1.2rem;
-  margin: 1rem 0;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  padding: 1.25rem 1.25rem 1rem 1.25rem;
+  box-shadow: var(--bfb-shadow);
+  height: 100%;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.card h3 {
-  margin-top: 0.1rem;
+.grid-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(18, 59, 74, 0.12);
 }
 
-/* --- Better tables --- */
-table {
-  border-collapse: separate;
-  border-spacing: 0;
-  border-radius: 12px;
-  overflow: hidden;
+.grid-card h3 {
+  margin-top: 0.2rem;
+  margin-bottom: 0.6rem;
+}
+
+.grid-card p {
+  color: var(--bfb-muted);
+  margin-bottom: 0.6rem;
+}
+
+/* =========================
+   TOC
+========================= */
+#TOC,
+.toc-active {
+  font-size: 0.94rem;
+}
+
+#TOC .nav-link.active {
+  color: var(--bfb-deep);
+  font-weight: 700;
+}
+
+/* =========================
+   FOOTER FEEL
+========================= */
+.nav-footer {
+  border-top: 1px solid rgba(18, 59, 74, 0.08);
+  color: var(--bfb-muted);
+  margin-top: 3rem;
+}
+
+/* =========================
+   DARK MODE TWEAKS
+========================= */
+[data-bs-theme="dark"] body {
+  background-color: #11171a;
+}
+
+[data-bs-theme="dark"] .navbar {
+  background-color: rgba(20, 25, 28, 0.92) !important;
+}
+
+[data-bs-theme="dark"] .grid-card,
+[data-bs-theme="dark"] .callout,
+[data-bs-theme="dark"] .table {
+  background-color: #182126;
+  box-shadow: none;
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-bs-theme="dark"] code {
+  background-color: rgba(255,255,255,0.08);
+}
+
+[data-bs-theme="dark"] h1,
+[data-bs-theme="dark"] h2,
+[data-bs-theme="dark"] h3,
+[data-bs-theme="dark"] h4 {
+  color: #edf7fa;
+}
+
+[data-bs-theme="dark"] p,
+[data-bs-theme="dark"] li,
+[data-bs-theme="dark"] figcaption {
+  color: #d4dde0;
 }

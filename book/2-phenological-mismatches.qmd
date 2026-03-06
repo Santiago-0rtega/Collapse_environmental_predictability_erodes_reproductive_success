@@ -1,6 +1,17 @@
 ---
 title: "S2. Phenological mismatch"
+subtitle: "Preparation and visualization of mismatch values under alternative bloom definitions"
+unnumbered: true
+toc: true
+toc-depth: 2
 ---
+
+::: {.lead}
+This chapter describes the preparation and visualization of phenological mismatch values, defined as the difference in days between laying date and estimated phytoplankton bloom onset. Mismatch distributions are compared across sexes, seasonal-window definitions, and bloom-onset thresholds used in the sensitivity analyses.
+:::
+
+
+
 
 ```{r}
 #| label: setup-pheno-mismatch
@@ -12,21 +23,22 @@ library(tidyverse)
 # For file path management
 library(here)
 ```
-This section describes the preparation and visualization of phenological mismatch values, defined as the difference (in days) between laying date and estimated phytoplankton bloom onset.
 
-## Data preparation
+## S2.1 Data preparation
 
-Phenological mismatch values were compiled for females and males using alternative bloom-onset definitions (5%, 15%, and 25% thresholds above the seasonal median chlorophyll-a concentration) and two seasonal windows (Winter–Spring and Autumn–Spring).
+Phenological mismatch values were compiled separately for females and males using alternative bloom-onset definitions based on threshold values above the seasonal median chlorophyll-a concentration. These definitions were evaluated under two seasonal windows: Winter–Spring and Autumn–Spring.
 
-For visualization, the dataset was reshaped to long format for plotting in `ggplot2`, producing a combined dataset with mismatch values grouped by sex, seasonal window, and threshold definition.
+For visualization, the dataset was reshaped to long format for plotting in ggplot2, yielding a combined dataset in which mismatch values were grouped by sex, seasonal window, and threshold definition.
 
-## Mismatch visualization
 
-Phenological mismatches were visualized as density distributions. Each panel corresponds to a combination of sex (females or males) and seasonal window (Winter–Spring or Autumn–Spring), with distributions compared across thresholds (5%, 15%, and 25%).
+
 
 ```{r}
-#| label: Plot pheno mismatch
+#| label: prepare-mismatch-data
 #| code-fold: true
+#| code-summary: "Show data preparation code"
+
+
 dat <- read.csv(here::here("..","data", "Lay_date_mismatches_250702.csv"))
 
 
@@ -76,14 +88,30 @@ combined_data <- bind_rows(data_A, data_B) %>%
 
 ```
 
+::: {.callout-note appearance="simple"}
+
+Note on threshold availability
+
+The Winter–Spring dataset includes mismatch values for 5%, 15%, and 25% thresholds, whereas the Autumn–Spring dataset currently includes 5% and 15% thresholds only. Consequently, Autumn–Spring values are absent from the 25% threshold panel.
+:::
+
+
+##  S2.2 Visualization of mismatch distributions
+Phenological mismatches were visualized as overlapping binned area histograms. Panels are arranged by threshold definition and sex, while colors distinguish the two seasonal-window definitions.
+
 ```{r}
-# --- NEW 2-COLOR PALETTE ---
+#| label: fig-phenological-mismatch
+#| fig-width: 10
+#| fig-height: 8
+#| fig-cap: "Distribution of phenological mismatch values under alternative bloom-onset thresholds and seasonal-window definitions. Panels are faceted by threshold definition (rows) and sex (columns), and colors distinguish Winter–Spring versus Autumn–Spring seasonal windows. Mismatch is defined as the difference in days between laying date and estimated bloom onset."
+#| code-fold: true
+#| code-summary: "Show plotting code"
 season_palette <- c(
   "Winter to Spring" = "#0072B2", # Blue
   "Autumn to Spring" = "#DAA520"  # Gold (Goldenrod)
 )
 
-# --- MODIFIED PLOT CODE ---
+
 
 # Map fill and color to 'Season'
 mismatch_plot <- ggplot(combined_data, aes(x = Value, 
@@ -129,16 +157,15 @@ mismatch_plot <- ggplot(combined_data, aes(x = Value,
   )
 
 
-```
 
-::: card
-```{r}
 print(mismatch_plot)
 ```
-:::
-
+The figure provides a visual comparison of how mismatch distributions change under alternative bloom-onset definitions used in the sensitivity analyses. Differences among panels indicate how both threshold choice and seasonal-window definition can influence the estimated timing gap between breeding and marine productivity.
 
 ```{r}
+#| label: save-mismatch-plot
+#| eval: false
+
 ggsave(filename = here("..","Plots", "mismatch_thresholds.pdf"),
        plot = mismatch_plot,
        dpi = 300, device = cairo_pdf)
@@ -150,11 +177,12 @@ ggsave(filename = here("..","Plots", "mismatch_thresholds.jpg"),
        dpi = 300)
 ```
 
-## Distributional comparison of mismatch values
 
-These density-style histograms compare the distribution of phenological mismatch values across bloom-onset thresholds (5%, 15%, 25%), sexes, and seasonal windows (Winter–Spring vs Autumn–Spring). Panels are faceted by threshold (rows) and sex (columns), and bars are colored by seasonal window. This figure is used to compare how mismatch distributions vary under alternative bloom definitions used in the sensitivity analyses.
+## Reproducibility
 
-::: {.callout-tip appearance="simple" icon="false"}
+::: {.callout-tip appearance="simple" collapse="true"}
+
+Session information
 ```{r}
 #| echo: false
 #| warning: false

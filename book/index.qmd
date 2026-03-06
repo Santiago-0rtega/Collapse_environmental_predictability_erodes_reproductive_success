@@ -1,28 +1,114 @@
-## Overview
+---
+title: "Phenological mismatch in the Blue-footed Booby"
+subtitle: "How declining environmental predictability erodes reproductive success"
+page-layout: full
+toc: false
+---
 
-This document provides the supplementary material accompanying our study, The collapse of environmental predictability erodes reproductive success in a tropical seabird. It includes additional methodological details, model-fitting workflows, diagnostic checks, model comparisons, sensitivity analyses, and supporting code/outputs.
+::: {.lead}
+This website presents the full reproducible workflow for our study of how increasing environmental unpredictability affects bloom timing, phenological mismatch, and reproductive success in the Blue-footed Booby.
+:::
 
-To ensure transparency and reproducibility, we also provide the complete datasets (in `.csv` format) and fitted statistical models (as `.rds` files) in the public repository.
+::: {.callout-important}
+## Core idea
 
+Climate change may erode reproductive performance not only by shifting the average timing of environmental events, but by making those events less predictable from year to year.
+:::
 
-Contents
+## Website structure
 
-Main analyses
+### Main analysis
 
-- S1. Chlorophyll-a bloom detection
+::: {.columns}
+::: {.column width="33%"}
+::: {.grid-card}
+### 1. Bloom onset
 
-- S2. Phenological mismatch
+Definition, extraction, and temporal patterns in bloom timing.
 
-- S3. Model fitting workflow
+[Open chapter](1-bloom-onset.qmd)
+:::
+:::
 
-- S4. Model diagnostics and selection
+::: {.column width="33%"}
+::: {.grid-card}
+### 2. Phenological mismatches
 
+Quantification of mismatch between breeding and marine productivity.
 
-- S5. Full model summaries
+[Open chapter](2-phenological-mismatches.qmd)
+:::
+:::
 
-Appendices
+::: {.column width="33%"}
+::: {.grid-card}
+### 3. Model fitting
 
-- Sensitivity analyses: Bloom threshold definition
+Statistical models linking mismatch and reproductive outcomes.
 
-- Code for figures
+[Open chapter](3-model-fitting.qmd)
+:::
+:::
+:::
 
+::: {.columns}
+::: {.column width="50%"}
+::: {.grid-card}
+### 4. Diagnostics
+
+Model checks, posterior diagnostics, and robustness assessment.
+
+[Open chapter](4-diagnostics.qmd)
+:::
+:::
+
+::: {.column width="50%"}
+::: {.grid-card}
+### 5. Full summaries
+
+Complete model summaries and supporting outputs.
+
+[Open chapter](6-full_summaries.qmd)
+:::
+:::
+:::
+
+### Appendices
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.grid-card}
+### Sensitivity analyses
+
+Alternative bloom definitions and robustness checks.
+
+[Open appendix](sensitivity_blooms.qmd)
+:::
+:::
+
+::: {.column width="50%"}
+::: {.grid-card}
+### Figure code
+
+Code used to generate figures and visual outputs.
+
+[Open appendix](code_figures.qmd)
+:::
+:::
+:::
+
+## Recommended reading path
+
+If you are new to the project, a good sequence is:
+
+1. Bloom onset  
+2. Phenological mismatches  
+3. Model fitting  
+4. Diagnostics  
+5. Full summaries  
+
+## Reproducibility
+
+::: {.callout-note}
+All analyses and outputs shown here are generated from the project workflow and linked to the public GitHub repository.
+:::

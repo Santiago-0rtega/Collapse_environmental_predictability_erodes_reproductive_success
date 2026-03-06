@@ -1,6 +1,20 @@
 ---
 title: "S4. Model diagnostics and selection"
+subtitle: "Diagnostic checks and leave-one-out model comparison"
+unnumbered: true
+toc: true
+toc-depth: 3
 ---
+
+::: lead
+This chapter documents the workflow used to evaluate model diagnostics and compare fitted Bayesian models. It includes automated checks for common fitting problems, such as divergent transitions and low effective sample size, together with predictive model comparison using leave-one-out cross-validation.
+:::
+
+::: {.callout-note appearance="simple"}
+## How to read this chapter
+
+This page is intended as a reproducible workflow record for diagnostic assessment and model selection. Tables shown here summarize pre-computed outputs used to identify problematic models and rank supported candidates within each analysis set.
+:::
 
 ```{r}
 #| label: setup-model-diagnostics
@@ -25,37 +39,38 @@ library(loo)
 library(DT)
 ```
 
-# Model diagnostics
+## S4.1 Overview
 
-This section documents the R code used to evaluate model diagnostics and perform model comparisons for the Bayesian analyses reported in the main text. The workflow has two components:
+Two complementary procedures were applied to the pheno_mismatch and fleds_full analysis sets:
 
-Model diagnostics: automated checks for common fitting issues (e.g., divergent transitions and low effective sample size, ESS)
+-   Model diagnostics: automated checks for divergent transitions and low effective sample size (ESS)
 
-Model comparison: evaluation of predictive performance using leave-one-out cross-validation (LOO-CV)
-
-These procedures were applied to the pheno_mismatch and fleds_full analysis sets
+-   Model comparison: ranking of supported models using leave-one-out cross-validation (LOO-CV)
 
 ::: {.callout-important appearance="simple"}
 Diagnostics for bloom onset location–scale models were inspected directly from model summaries because only one model was fitted per threshold.
 :::
 
-## Diagnostic and comparison functions
+## S4.2 Diagnostic and comparison functions
+
+The workflow relied on three helper functions: one to summarize diagnostics, one to inventory saved LOO objects, and one to compare models separately by sex.
 
 ::: panel-tabset
-## Function 1: `create_diagnostic_summary()`
+## `create_diagnostic_summary()`
 
-This function automates convergence and sampling-efficiency checks for Bayesian models. It identifies saved model files, loads them, and performs one of two checks:
+This function automates model-diagnostic checks for saved Bayesian model objects. It searches a target analysis directory, loads model files, and performs one of two checks:
 
--   Divergences: counts divergent transitions, which may indicate biased posterior exploration.
+-   counts divergent transitions, which may indicate problematic posterior exploration
 
--   ESS: evaluates bulk and tail effective sample sizes, flagging parameters with insufficient independent samples (\< 400). We used a conservative threshold of 400 for both bulk and tail ESS to flag potentially unstable estimates for further inspection
+-   flags parameters with low bulk or tail ESS, using a conservative threshold of 400
 
-Results are returned as a summary table for each model (separated by sex), including the diagnostic outcome and any flagged parameters.
+The output is a summary table listing the sex, model name, diagnostic result, and any problematic parameters.
 
 ```{r}
-#| label: Function 1
+#| label: create-diagnostic-summary
 #| eval: false
 #| code-fold: true
+#| code-summary: "Show diagnostic summary function"
 create_diagnostic_summary <- function(analysis_name, check_type = "divergences", ess_threshold = 400) {
   # --- Load required libraries ---
   if (!require(here)) {install.packages("here"); library(here)}
@@ -125,13 +140,15 @@ create_diagnostic_summary <- function(analysis_name, check_type = "divergences",
 }
 ```
 
-## Function 2: `list_analysis_models()`
+## `list_analysis_models()`
 
-This function inventories pre-computed LOO objects for a given analysis and returns a data frame listing the available models (sex, model name, file path) for comparison.
+This function inventories saved LOO objects for a given analysis and returns a table listing the sex, model name, and file path for each available model.
 
 ```{r}
-#| label: Function 2
+#| label: list-analysis-models
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show model inventory function"
 list_analysis_models <- function(analysis_name) {
   if (!require(here)) {install.packages("here"); library(here)}
   if (!require(dplyr)) {install.packages("dplyr"); library(dplyr)}
@@ -156,13 +173,16 @@ list_analysis_models <- function(analysis_name) {
 }
 ```
 
-## Function 3: `compare_models_by_sex()`
+## `compare_models_by_sex()`
 
-This function compares models using the loo package. Models are grouped by sex, optionally excluding problematic fits, and ranked by expected log predictive density (ELPD). The comparison output includes differences in ELPD, standard errors, and LOO Information Criterion (LOOIC).
+This function compares models using the loo package. Models are grouped by sex, optionally excluding problematic fits, and ranked by expected log predictive density (ELPD). The resulting output includes ELPD differences, standard errors, and LOOIC-based comparisons.
 
 ```{r}
-#| label: Function 3
+#| label: compare-models-by-sex
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show LOO comparison function"
+
 compare_models_by_sex <- function(model_inventory, exclude_models = NULL) {
   if (!require(loo)) {install.packages("loo"); library(loo)}
   if (!require(dplyr)) {install.packages("dplyr"); library(dplyr)}
@@ -208,21 +228,24 @@ compare_models_by_sex <- function(model_inventory, exclude_models = NULL) {
 ```
 :::
 
-# Application to Analyses
+## S4.3 Application to pheno_mismach
 
-The following sections apply these functions to each analysis set.
+This section applies the diagnostic and model-comparison workflow to the phenological mismatch analysis set.
 
 :::: panel-tabset
 ## Diagnostic Checks
 
-Both divergent transitions and low ESS values were checked across all models in this analysis set.
+Both divergent transitions and low ESS values were evaluated across all fitted models in the pheno_mismatch analysis set.
 
 ::: panel-tabset
 ## Divergent transitions
 
 ```{r}
-#| label: Check for divergences PM
+#| label: run-divergence-checks-pm
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show divergence diagnostic code"
+
 # Check for divergent transitions
 divergence_summaryPM <- create_diagnostic_summary("pheno_mismatch", check_type = "divergences")
 print(divergence_summaryPM)
@@ -239,8 +262,10 @@ DT::datatable(divergence_summaryPM, options = list(pageLength = 5))
 ## Effective Sample Size (ESS)
 
 ```{r}
-#| label: Check for divergences and low ESS pheno_mismatch
+#| label: run-ess-checks-pm
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show ESS diagnostic code"
 # Check for low Effective Sample Size (ESS)
 ess_summaryPM <- create_diagnostic_summary("pheno_mismatch", check_type = "ess", ess_threshold = 400)
 print(ess_summaryPM)
@@ -255,13 +280,15 @@ DT::datatable(ess_summaryPM, options = list(pageLength = 5))
 :::
 ::::
 
-## Model comparison
+# Model comparison
 
-Pre-computed LOO objects were compared separately for males and females after excluding models flagged as problematic in diagnostic checks.
+Pre-computed LOO objects were compared separately for females and males after excluding models flagged as problematic in the diagnostic checks.
 
 ```{r}
-#| label: Model comparison pheno_mismatch
+#| label: run-model-comparison-pm
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show LOO comparison code for pheno_mismatch"
 # Create an inventory of all LOO objects for the analysis
 model_inventoryPM <- list_analysis_models("pheno_mismatch")
 
@@ -298,17 +325,22 @@ DT::datatable(all_comparisonsPMm, options = list(pageLength = 5))
 ```
 :::
 
-## Number of fledglings (`fleds_full`)
-
-:::: panel-tabset
-## Diagnostic Checks
+## S4.4 Number of fledglings (`fleds_full`)
 
 ::: panel-tabset
+## Diagnostic Checks
+
+Both divergent transitions and low ESS values were evaluated across all fitted models in the fleds_full analysis set.
+
+::: panel-tabset
+
 ## Divergent transitions
 
 ```{r}
-#| label: Check for divergences  fleds_full
+#| label: run-divergence-checks-fs
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show divergence diagnostic code for fleds_full"
 
 divergence_summaryFS <- create_diagnostic_summary("fleds_full", check_type = "divergences")
 DT::datatable(divergence_summaryFS, options = list(pageLength = 5))
@@ -324,11 +356,13 @@ divergence_summaryFS <-read.csv(here("summaries","divergence_summaryFS.csv"),hea
 DT::datatable(divergence_summaryFS, options = list(pageLength = 5))
 ```
 
-## Low ESS
+## Effective sample size (ESS)
 
 ```{r}
-#| label: Check for low ESS fleds_full
+#| label: run-ess-checks-fs
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show ESS diagnostic code for fleds_full"
 ess_summaryFS <- create_diagnostic_summary("fleds_full", check_type = "ess", ess_threshold = 400)
 DT::datatable(ess_summaryFS, options = list(pageLength = 5))
 ```
@@ -340,13 +374,16 @@ ess_summaryFS<-read.csv(here("summaries","ess_summaryFS .csv"),header=T)
 DT::datatable(ess_summaryFS, options = list(pageLength = 5))
 ```
 :::
-::::
 
 ## Model comparison
 
+Saved LOO objects were compared separately for females and males after excluding models flagged as problematic in the diagnostic stage.
+
 ```{r}
-#| label: Model comparison fleds_full
+#| label: run-model-comparison-fs
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show LOO comparison code for fleds_full"
 
 # Create an inventory of all LOO objects for the analysis
 model_inventoryFS <- list_analysis_models("fleds_full")
@@ -386,7 +423,11 @@ DT::datatable(all_comparisonsFSm, options = list(pageLength = 5))
 ```
 :::
 
+## Reproducibility
+
 ::: {.callout-tip appearance="simple" icon="false"}
+## Session information
+
 ```{r}
 #| echo: false
 #| warning: false

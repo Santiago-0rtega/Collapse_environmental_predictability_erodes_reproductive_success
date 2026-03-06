@@ -1,7 +1,14 @@
 ---
 title: "S5. Full model summaries"
+subtitle: "Posterior summaries for best-supported models"
 unnumbered: true
+toc: true
+toc-depth: 2
 ---
+
+::: lead
+This chapter reports full posterior summaries for the best-supported models from the primary analyses. These outputs are provided as a transparent record of model structure, parameter estimates, uncertainty, and sampling diagnostics for the models retained after model comparison.
+:::
 
 ```{r}
 #| label: setup-final-summaries
@@ -33,9 +40,11 @@ pacman::p_load(here, brms)
 -   `RING`: Individual identifier (factor).
 :::
 
-This section reports posterior summaries for the best-supported models from the primary analyses. Best-supported models for phenological mismatch and number of fledglings were selected using leave-one-out cross-validation (LOO-CV; see S5).
+Best-supported models for phenological mismatch and number of fledglings were selected using leave-one-out cross-validation (LOO-CV; see S4). The summaries below are shown in full to document posterior estimates, group-level variation, and sampling diagnostics for the final supported models.
 
-## Bloom timing (location–scale model)
+## S5.1 Bloom timing
+
+The bloom timing analysis was based on a Gaussian location–scale model for bloom onset estimated at the 5% threshold.
 
 ```{r}
 #| label: summary-bloom
@@ -51,9 +60,13 @@ print(summary(model_bloom),digits = 4)
 
 ```
 
-## Best-supported individual-based models
+## S5.2 Best-supported individual-based models
 
-::::: panel-tabset
+The following summaries correspond to the best-supported individual-based models for phenological mismatch and fledging success, shown separately for females and males. 
+
+
+::::: panel-tabset 
+
 ## Females
 
 ::: panel-tabset
@@ -123,12 +136,17 @@ print(summary(model_fs_male_best),digits=4)
 ```
 :::
 :::::
+## Reproducibility
 
-::: {.callout-tip appearance="simple" icon="false"}
+::: {.callout-tip appearance="simple" icon="false"} 
+
+## Session information
+
 ```{r}
 #| echo: false
 #| warning: false
 #| message: false
 utils::sessionInfo()
 ```
+
 :::

@@ -6,10 +6,12 @@ project:
     - images
 
 book:
-  title: "The collapse of environmental predictability erodes reproductive success in a Tropical seabird"
-  title-short: "Phenological Mismatch in a Tropical Predator"
+  title: "The collapse of environmental predictability erodes reproductive success in a tropical seabird"
+  title-short: "Phenological mismatch in a tropical predator"
+  subtitle: "A reproducible analysis website for the Blue-footed Booby project"
   author:
     - name: Santiago Ortega
+      corresponding: true
     - name: Cristina Rodríguez
     - name: Ayumi Mizuno
     - name: Laura Arroyo
@@ -19,9 +21,10 @@ book:
   date: last-modified
   date-format: "MMMM D, YYYY"
   cover-image: Sula.JPG
+
   chapters:
     - index.qmd
-    - part: "Main Analysis"
+    - part: "Main analysis"
       chapters:
         - 1-bloom-onset.qmd
         - 2-phenological-mismatches.qmd
@@ -32,29 +35,39 @@ book:
       chapters:
         - sensitivity_blooms.qmd
         - code_figures.qmd
-        
+
   navbar:
+    pinned: true
     right:
-      - icon: github
+      - text: "GitHub"
+        icon: github
         href: https://github.com/Santiago-0rtega/Collapse_environmental_predictability_erodes_reproductive_success
+      - text: "References"
+        href: references.qmd
+
   sidebar:
     style: "floating"
     search: true
     collapse-level: 2
+    pinned: true
 
-number-sections: false 
-bibliography: references.bib
-biblio-style: apalike
+  page-navigation: true
+  reader-mode: true
+  repo-url: https://github.com/Santiago-0rtega/Collapse_environmental_predictability_erodes_reproductive_success
+  repo-actions: [source, issue]
+
+
+number-sections: false
 
 format:
   html:
     theme:
-      light: cosmo 
+      light: cosmo
       dark: flatly
     css: styles.css
     mainfont: "Atkinson Hyperlegible"
     fontsize: 1.05em
-    linestretch: 1.35
+    linestretch: 1.4
     favicon: images/favicon.png
 
     toc: true
@@ -63,22 +76,29 @@ format:
 
     code-tools: true
     code-copy: true
-    
+    code-overflow: wrap
+    code-link: true
 
     link-external-newwindow: true
     smooth-scroll: true
+    anchor-sections: true
+    footnotes-hover: true
+    citations-hover: true
 
-    # nicer citations in browser
-    citeproc: true
     page-layout: full
+    fig-align: center
+    fig-responsive: true
+
     grid:
       sidebar-width: 300px
-      body-width: 1400px  
-      margin-width: 200px
+      body-width: 1350px
+      margin-width: 220px
       gutter-width: 1.5rem
+
 execute:
   freeze: auto
   warning: false
   message: false
+  echo: true
 
 editor: visual

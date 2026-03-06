@@ -1,21 +1,39 @@
 ---
 title: "Sensitivity analyses: Bloom onset thresholds"
+subtitle: "Robustness of bloom phenology inference across threshold definitions"
 unnumbered: true
+toc: true
+toc-depth: 2
 ---
-This section evaluates whether inference about bloom phenology is robust to the chlorophyll-a bloom onset threshold used to define bloom start (5%, 15%, and 25% above the seasonal median). We report posterior summaries for the location–scale models fit to each threshold and provide the code used to fit these models.
 
+::: lead
+This section evaluates whether inference about bloom phenology is robust to the chlorophyll-a threshold used to define bloom onset. We compare posterior summaries from Gaussian location–scale models fit to bloom onset defined at 5%, 15%, and 25% above the seasonal median chlorophyll-a concentration, and provide the code used to fit these models.
+:::
+
+::: {.callout-note appearance="simple"}
+## Aim of this sensitivity analysis
+
+These models test whether inference about temporal trends in both the **mean timing** and **variability** of bloom onset remains consistent across alternative bloom-threshold definitions.
+:::
 
 ```{r}
 
-if (!require("pacman")) install.packages("pacman")
+#| label: setup-threshold-sensitivity
+#| include: false
+
 pacman::p_load(
-    brms, dplyr, here, future, purrr, furrr,cmdstanr,tibble, stringr
+  brms, dplyr, here, future, purrr, furrr, cmdstanr, tibble, stringr
 )
 ```
 
-# Threshold summaries
+## Threshold summaries
+
+The tabs below report posterior summaries for the location–scale models fit to bloom onset defined using three alternative chlorophyll-a thresholds. 
+
+
 
 ::: panel-tabset
+
 ## 5% Threshold
 
 ```{r}
@@ -39,26 +57,34 @@ summary(readRDS(here("..","Rdata","model_delta15.rds")))
 #| eval: true
 summary(readRDS(here("..","Rdata","model_delta25.rds")))
 ```
+
 :::
 
-# Model fitting
+## Model fitting
+
+The following code documents the workflow used to transform bloom onset dates and fit the threshold-specific Gaussian location–scale models.
 
 ```{r}
-#| label: setup
+#| label: setup-threshold-models
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show computational setup"
+#| 
 # --- Parallel Processing Setup ---
 options(mc.cores = parallel::detectCores(), brms.backend = "cmdstanr")
 plan(multisession, workers=4) 
 ```
 
-## Data transformation: bloom onset as days since winter solstice
+### Data transformation
 
-Bloom onset dates were converted to numeric offsets (days) from the previous winter solstice (December 21), matching the parameterization used in the main bloom phenology analyses.
+Bloom onset dates were converted to numeric offsets, measured as days since the previous winter solstice (21 December), matching the parameterization used in the main bloom phenology analyses.
 
 ```{r}
 
-#| label: data-transformation
+#| label: threshold-data-transformation
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show data transformation code"
 dat <- read.csv(here("..","data","bloom_dates.csv"))
 
 dat <- dat %>%
@@ -91,13 +117,17 @@ dat <- dat %>%
   # Drop original date strings and helper date column after transformation
   select(-starts_with("bloom_start_thr"), -winter_start_date)
 ```
+
 ## Fit Gaussian location–scale models
 
-The same Gaussian location–scale model structure was fit to each bloom onset metric (delta5, delta15, delta25), with TIME included in both the location (mean) and scale (residual SD) components.
+The same Gaussian location–scale structure was fit to each bloom onset metric (delta5, delta15, delta25), with TIME included in both the location (mean) and scale (residual SD) components.
 
 ```{r}
-#| label: fit-location-scale-models
+#| label: threshold-location-scale-function
 #| eval: false
+#| code-fold: true
+#| code-summary: "Show location–scale model function"
+#| 
 run_location_scale_models <- function(response_vars, data) {
   if (!dir.exists(here("Rdata"))) {
     dir.create(here("Rdata"))
@@ -153,6 +183,8 @@ run_location_scale_models <- function(response_vars, data) {
 }
 ```
 
+### Model execution
+
 ```{r}
 #| label: run-models
 #| eval: false
@@ -163,7 +195,11 @@ delta_vars <- c("delta5", "delta15", "delta25")
 run_location_scale_models(response_vars = delta_vars, data = dat)
 ```
 
+## Reproducibility
+
 ::: {.callout-tip appearance="simple" icon="false"}
+## Session information
+
 ```{r}
 #| echo: false
 #| warning: false

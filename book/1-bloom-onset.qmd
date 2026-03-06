@@ -1,7 +1,14 @@
 ---
-title: "S1 Chlorophyll-a bloom detection"
+title: "S1. Chlorophyll-a bloom detection"
+subtitle: "Mapping the study area and estimating seasonal bloom onset"
 unnumbered: true
+toc: true
+toc-depth: 3
 ---
+
+::: lead
+This chapter describes how chlorophyll-a bloom onset was estimated from satellite-derived time series. We first provide geographic context for Isla Isabel and the chlorophyll extraction area, then describe the bloom detection algorithm, compare seasonal-window definitions, and visualize the resulting onset-date distributions.
+:::
 
 ```{r}
 #| label: setup-bloom-onset
@@ -31,17 +38,17 @@ library(DT)
 
 ```
 
-# S1.1 Map of Isla Isabel
+## S1.1 Study area
 
-A map of Isla Isabel, Mexico, is provided for geographic context. The figure shows the island’s location in the eastern tropical Pacific, the surrounding coastal region, and the focal extraction area used for chlorophyll-a data.
+The figure below provides geographic context for Isla Isabel, Mexico, showing the island’s location in the eastern tropical Pacific and the focal extraction polygon used to obtain chlorophyll-a data for bloom detection.
 
 ```{r}
-#| label: map_final_refinements
+#| label: fig-isla-isabel-map
 #| fig-width: 10
 #| fig-height: 8
+#| fig-cap: "Location of Isla Isabel, Mexico, and the focal extraction polygon used to derive chlorophyll-a time series. The main panel shows the broader eastern tropical Pacific and adjacent landmass, whereas the inset shows Isla Isabel and the extraction area in detail."
 #| code-fold: true
-
-
+#| code-summary: "Show code"
 
 # --- Define Data ---
 # Define the polygon coordinates
@@ -121,13 +128,10 @@ mapIS<-ggdraw() +
 
 ```
 
-
-
-::: card
 ```{r}
+#| echo: false
 mapIS
 ```
-:::
 
 ```{r}
 #| label: save_map
@@ -144,18 +148,21 @@ ggsave(filename = here("..","Plots", "Map_Isla_Isabel.jpg"),
        dpi = 300)
 ```
 
-# S1.2 Bloom onset
-This section describes the procedure used to estimate phytoplankton bloom onset from satellite-derived chlorophyll-a time series.
+## S1.2 Bloom onset estimation
 
-## Chlorophyll-a bloom detection
+This section describes the procedure used to estimate phytoplankton bloom onset from satellite-derived chlorophyll-a time series. We used dynamic, season-specific thresholds based on the median chlorophyll-a concentration within each seasonal window, and identified bloom onset as the first sustained increase above threshold.
 
-Satellite-derived chlorophyll-a data were processed to identify the onset of seasonal blooms.
+::: {.callout-note appearance="simple"}
+## Detection logic
 
-::::: panel-tabset
-## Load chlorophyll data
+For each seasonal window, bloom onset was defined as the first day on which chlorophyll-a exceeded a season-specific threshold for two consecutive 7-day rolling medians. This criterion was used to identify sustained increases rather than short-lived spikes.
+:::
 
-Chlorophyll-a data were loaded from a CSV file, cleaned by removing missing values (NA), restricted to the date and chlorophyll columns, and converted to a date format using `lubridate::dmy()`.
+### Workflow
 
+The bloom detection workflow consisted of three steps: loading and cleaning the chlorophyll-a time series, estimating bloom onset under two alternative seasonal-window definitions, and summarizing the resulting onset dates across thresholds.
+
+## Load chlorophyll-a data.
 
 ```{r}
 #| label: chlorophyll data
@@ -170,26 +177,23 @@ CHL_df <- CHL_df %>%
 
 ## Estimate sustained bloom onset
 
-Two custom functions were used to estimate bloom onset dates under different seasonal-window definitions. Both apply the same detection procedure:
+The same detection logic was applied under both seasonal-window definitions:
 
-- Seasonal window: Define a season year spanning either Winter–Spring (21 December–20 June) or Autumn–Spring (21 September–20 June).
+-   **Seasonal window:** either Winter–Spring (21 December–20 June) or Autumn–Spring (21 September–20 June)
+-   **Baseline:** the median chlorophyll-a concentration within each seasonal window
+-   **Thresholds:** 5%, 15%, 25%, and 30% above the seasonal median
+-   **Sustained increase criterion:** the first day for which two consecutive 7-day rolling medians exceeded the threshold
+-   **Output:** bloom onset date, chlorophyll-a value at onset, and the threshold value for that season
 
-- Baseline: Compute the seasonal median chlorophyll-a concentration for each season year.
+::: panel-tabset
+## Winter–Spring window
 
-- Thresholds: Define dynamic thresholds at 5%, 15%, 25%, and 30% above the seasonal median.
-
-- Sustained increase criterion: Identify the first day for which two consecutive 7-day rolling medians exceed the threshold, to distinguish sustained increases from short-term fluctuations.
-
-- Output: Return the estimated bloom onset date, chlorophyll-a value at onset, and the corresponding threshold value.
-
-:::: panel-tabset
-Winter–Spring window (21 December–20 June)
-
-This function defines the season as running from December 21st of the previous year to June 20th of the current year.
+This version defines the seasonal window from 21 December of the previous year to 20 June of the focal year.
 
 ```{r}
-#| label: Function to calculate sustained bloom start date
-
+#| label: bloom-function-winter-spring
+#| code-fold: true
+#| code-summary: "Show code"
 calculate_sustained_bloom_start <- function(data_frame, value_column_name = "daily_value", min_duration_days = 7) {
 
   thresholds <- c(0.05, 0.15,0.25, 0.30)
@@ -287,14 +291,14 @@ calculate_sustained_bloom_start <- function(data_frame, value_column_name = "dai
 #write.csv(bloom_starts2, here("data", "bloom_dates.csv"), row.names = FALSE)
 ```
 
-## Autumn–Spring window (21 September–20 June)
+## Autumn–Spring window
 
-This function defines a broader season, running from September 21st of the previous year to June 20th of the current year.
+This version defines the seasonal window from 21 September of the previous year to 20 June of the focal year.
 
 ```{r}
-#| label: Function to calculate sustained bloom start from Autumn to Spring
-
-
+#| label: bloom-function-autumn-spring
+#| code-fold: true
+#| code-summary: "Show code"
 calculate_sustained_bloom_startB <- function(data_frame, value_column_name = "daily_value", min_duration_days = 7) {
 
   thresholds <- c(0.05, 0.15,0.25, 0.30)
@@ -391,11 +395,15 @@ calculate_sustained_bloom_startB <- function(data_frame, value_column_name = "da
 bloom_startsB <- calculate_sustained_bloom_startB(CHL_df)
 #write.csv(bloom_startsB, here("data", "bloom_datesB.csv"), row.names = FALSE)
 ```
+:::
 
-## Summary of bloom start dates
+### Summary tables
+
+The tables below summarize estimated bloom onset dates under the two seasonal-window definitions. These outputs were used to compare the robustness of onset estimates across threshold choices and seasonal boundaries.
 
 ::: panel-tabset
-## Summary for Winter to Spring
+## Winter–Spring results
+
 This table summarizes estimated bloom onset dates for the Winter–Spring seasonal window (21 December–20 June).
 
 ```{r}
@@ -416,7 +424,7 @@ DT::datatable(
   formatStyle(columns = names(bloom_startsA), `text-align` = 'center')
 ```
 
-## Summary for Autumn to Spring
+## Autumn–Spring results
 
 This table summarizes estimated bloom onset dates for the Autumn–Spring seasonal window (21 September–20 June).
 
@@ -438,21 +446,19 @@ DT::datatable(
   formatStyle(columns = names(bloom_startsB), `text-align` = 'center')
 ```
 :::
-::::
-:::::
 
-# S1.3 Visualization of Chlorophyl-a bloom onset dates
+## S1.3 Visualization of chlorophyll-a bloom onset dates
 
-To visualize the distribution of estimated bloom onset dates across years, detection outputs were transformed and plotted for comparison across thresholds and seasonal windows.
+To compare bloom timing across years, thresholds, and seasonal-window definitions, bloom onset dates were transformed to a common seasonal calendar and plotted as distributions.
 
 ### Data processing for visualization
 
-Before plotting, bloom onset estimates were converted to long format for visualization with `ggplot2`. A helper function (`process_for_plotting`) standardized dates to a common seasonal calendar by assigning September–December dates to year 2000 and January–June dates to year 2001, enabling comparison of timing distributions across years and thresholds.
+Before plotting, bloom onset estimates were reshaped to long format and standardized to a common seasonal calendar. Dates falling in September–December were assigned to year 2000, whereas dates falling in January–June were assigned to year 2001. This made it possible to compare timing distributions across thresholds and seasonal windows independently of calendar year.
 
 ```{r}
 #| label: Frequency of bloom start dates
 #| code-fold: true
-
+#| code-summary: "Show code"
 process_for_plotting <- function(results) {
   results %>%
     select(season_year, starts_with("bloom_start_")) %>%
@@ -502,9 +508,11 @@ mean_dates_B <- bloom_dates_long_B %>%
 ### Generating and combining onset-date distribution plots
 
 Binned area plots were generated for each seasonal window and faceted by threshold level. Panel labels indicate the number of seasons with a detected bloom onset for each threshold. The Winter–Spring and Autumn–Spring panels were combined for side-by-side comparison.
+
 ```{r}
 #| label: Area plot of bloom start dates
-
+#| code-fold: true
+#| code-summary: "Show code"
 # --- Define the color palette once ---
 bloom_colors <- c("5%"="#2c7bb6", "15%"="#abd9e9", "25%"="#fdae61", "30%"="#d7191c")
 
@@ -565,26 +573,16 @@ combined_plot <- area_plot_A + area_plot_B +
 
 ```
 
-::: card
 ```{r}
-# Print the final combined plot
+#| label: fig-bloom-onset-distributions
+#| fig-width: 11
+#| fig-height: 10
+#| fig-cap: "Distribution of estimated chlorophyll-a bloom onset dates across years under alternative threshold values and seasonal-window definitions. The left column shows results for the Winter–Spring window (21 December–20 June), and the right column shows results for the Autumn–Spring window (21 September–20 June). Rows correspond to thresholds defined as 5%, 15%, 25%, and 30% above the seasonal median chlorophyll-a concentration."
+#| code-fold: true
 print(combined_plot)
 ```
-:::
 
-
-
-
-
-### Description of bloom onset date distributions
-
-This figure summarizes the distribution of detected phytoplankton bloom onset dates across years under alternative detection thresholds and seasonal windows. The left column shows results for the Winter–Spring window (21 December–20 June), and the right column shows results for the Autumn–Spring window (21 September–20 June). Rows correspond to threshold definitions (5%, 15%, 25%, and 30% above the seasonal median chlorophyll-a concentration).
-
-Bloom onset dates were standardized to a common seasonal calendar (September–December mapped to year 2000; January–June mapped to year 2001) to enable comparison of timing distributions across years. Panel labels report the number of seasons with detected bloom onsets for each threshold.
-
-The plots are provided to visualize how estimated bloom onset timing varies across threshold choices and seasonal-window definitions, and to support the robustness comparisons used in the main analyses and supplementary sensitivity checks.
-
-
+The two seasonal-window definitions produced broadly similar distributions of bloom onset dates, but the Autumn–Spring window allowed earlier detections in some years because it included more of the pre-bloom period. Comparing thresholds also showed that stricter thresholds tended to shift estimated bloom onset later in the season, as expected.
 
 ```{r}
 #| label: Save bloom start date plots
@@ -600,7 +598,11 @@ ggsave(filename = here("..","Plots", "bloom_thresholds.jpg"),
        dpi = 300)
 ```
 
+## Reproducibility
+
 ::: {.callout-tip appearance="simple" icon="false"}
+## Session information
+
 ```{r}
 #| echo: false
 #| warning: false
