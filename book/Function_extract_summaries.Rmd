@@ -95,23 +95,15 @@ model_bloom <- readRDS(here::here("..","Rdata", "model_delta5.rds"))
 copy_summary(model_bloom)
 ```
 
-
-
-
 ```{r}
 model_pm_female_best <- readRDS(here::here("..","Rdata", "female_fit_m11.rds"))
 copy_summary(model_pm_female_best)
 ```
 
-
 ```{r}
 model_pm_male_best <- readRDS(here::here("..","Rdata", "male_fit_m11.rds"))
 copy_summary(model_pm_male_best)
 ```
-
-
-
-
 
 ```{r}
 
@@ -121,8 +113,6 @@ model_fs_female_best <- readRDS(here::here("..","Rdata", "female_fit_Q17.rds"))
 
 copy_summary(model_fs_female_best)
 ```
-:::
-
 
 ```{r}
 #| label: summary-fs-male-final
@@ -131,8 +121,55 @@ copy_summary(model_fs_female_best)
 
 
 # Load the model
-model_fs_male_best <- readRDS(here::here("..","Rdata", "male_fit_Q17.rds")
+model_fs_male_best <- readRDS(here::here("..","Rdata", "male_fit_Q17.rds"))
 
 copy_summary(model_fs_male_best)
 ```
+
+## Sensitivity analysis: excluding 2015-2016 ENSO years
+
+The models below repeat the retained mismatch and nest-success structures after excluding the unusually poor 2015 and 2016 breeding seasons (see the "Sensitivity analysis: excluding the 2015-2016 ENSO years" appendix for details).
+
+```{r}
+#| label: summary-drop-enso-mismatch-female
+#| eval: true
+#| size: "footnotesize"
+
+model_pm_female_drop_enso <- readRDS(here::here("..","Rdata", "drop_enso_2015_2016", "female_mismatch_m11_drop_2015_2016.rds"))
+copy_summary(model_pm_female_drop_enso)
+```
+
+```{r}
+#| label: summary-drop-enso-mismatch-male
+#| eval: true
+#| size: "footnotesize"
+
+model_pm_male_drop_enso <- readRDS(here::here("..","Rdata", "drop_enso_2015_2016", "male_mismatch_m11_drop_2015_2016.rds"))
+copy_summary(model_pm_male_drop_enso)
+```
+
+```{r}
+#| label: summary-drop-enso-fs-female
+#| eval: true
+#| size: "footnotesize"
+
+model_fs_female_drop_enso <- readRDS(here::here("..","Rdata", "drop_enso_2015_2016", "female_fledging_Q17_drop_2015_2016.rds"))
+copy_summary(model_fs_female_drop_enso)
+```
+
+```{r}
+#| label: summary-drop-enso-fs-male
+#| eval: true
+#| size: "footnotesize"
+
+model_fs_male_drop_enso <- readRDS(here::here("..","Rdata", "drop_enso_2015_2016", "male_fledging_Q17_drop_2015_2016.rds"))
+copy_summary(model_fs_male_drop_enso)
+```
+
+
+```{r}
+summary(model_fs_male_drop_enso)
+```
+
+
 

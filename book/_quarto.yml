@@ -11,6 +11,7 @@ book:
   subtitle: "A reproducible analysis website for the Blue-footed Booby project"
   author:
     - name: Santiago Ortega
+      url: https://santiago-0rtega.github.io/
       corresponding: true
     - name: Cristina Rodríguez
     - name: Ayumi Mizuno
@@ -20,7 +21,7 @@ book:
 
   date: last-modified
   date-format: "MMMM D, YYYY"
-  cover-image: Sula.JPG
+  cover-image: images/Sula.JPG
 
   chapters:
     - index.qmd
@@ -34,6 +35,8 @@ book:
     - part: "Appendices"
       chapters:
         - sensitivity_blooms.qmd
+        - sensitivity_drop_enso.qmd
+        - SI_individual_mismatch_trajectories.qmd
         - code_figures.qmd
 
   navbar:
@@ -63,12 +66,13 @@ format:
   html:
     theme:
       light: cosmo
-      dark: flatly
+      dark: darkly
     css: styles.css
-    mainfont: "Atkinson Hyperlegible"
+    include-in-header: fonts-header.html
+    mainfont: "Fira Sans"
     fontsize: 1.05em
-    linestretch: 1.4
-    favicon: images/favicon.png
+    linestretch: 1.5
+    favicon: images/cossee_logo.png
 
     toc: true
     toc-depth: 3

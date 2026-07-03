@@ -3,10 +3,19 @@ title: "Phenological mismatch in the Blue-footed Booby"
 subtitle: "How declining environmental predictability erodes reproductive success"
 page-layout: full
 toc: false
+title-block-banner: true
 ---
 
+::: {.columns}
+::: {.column width="60%"}
 ::: {.lead}
 This website presents the full reproducible workflow for our study of how increasing environmental unpredictability affects bloom timing, phenological mismatch, and reproductive success in the Blue-footed Booby.
+:::
+:::
+
+::: {.column width="40%"}
+![](images/booby-portrait.jpg){.hero-photo}
+:::
 :::
 
 ::: {.callout-important}
@@ -111,4 +120,10 @@ If you are new to the project, a good sequence is:
 
 ::: {.callout-note}
 All analyses and outputs shown here are generated from the project workflow and linked to the public GitHub repository.
+:::
+
+::: {.lab-affiliation}
+![](images/cossee_logo.png)
+
+This project is carried out within the COSSEE Lab.
 :::

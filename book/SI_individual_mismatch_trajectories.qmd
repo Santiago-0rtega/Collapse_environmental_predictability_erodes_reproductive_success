@@ -1,0 +1,320 @@
+---
+title: "Individual mismatch trajectories with age"
+subtitle: "Highlighting a subset of individual random-slope trajectories behind the population-level age trend"
+unnumbered: true
+toc: true
+toc-depth: 2
+---
+
+
+
+```{r}
+#| label: setup-individual-trajectories
+#| include: false
+
+pacman::p_load(dplyr, tidyr, purrr,
+               ggplot2, here, patchwork,
+               tidybayes, brms)
+```
+
+The custom plotting theme is reused from `code_figures.qmd` for visual consistency with the main figures.
+
+```{r}
+#| label: custom-theme-individual-trajectories
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show custom plotting theme"
+
+custom_theme <- function(show_legend = FALSE) {
+  legend_pos <- if (show_legend) "bottom" else "none"
+
+  theme_classic(
+    base_size = 10,
+    base_family = "Arial"
+  ) +
+  theme(
+    axis.ticks.minor = element_line(color = "black", linewidth = 0.25),
+    legend.position = legend_pos,
+    plot.margin = margin(5, 5, 5, 5),
+    panel.background = element_rect(fill = 'transparent', colour = NA),
+    plot.background = element_rect(fill = 'transparent', colour = NA),
+    axis.title.x = element_text(margin = margin(t = 5)),
+    axis.title.y = element_text(margin = margin(r = 5)),
+    axis.text.x = element_text(margin = margin(t = 2)),
+    axis.text.y = element_text(hjust = 1, margin = margin(r = 2)),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = rel(1.2), margin = margin(b = 8)),
+    plot.subtitle = element_text(hjust = 0.5, size = rel(1.0), margin = margin(b = 8)),
+    axis.line = element_line(color = "black"),
+    axis.ticks = element_line(color = "black")
+  )
+}
+```
+
+## Load data and fitted models
+
+The same phenological mismatch models and preprocessed data used in the main figures are reused here.
+
+```{r}
+#| label: load-mismatch-data-models
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show data and model loading"
+
+female_dat_raw <- read.csv(here("..", "data", "Lay_date_mismatches_250702.csv"))
+male_dat_raw   <- read.csv(here("..", "data", "Lay_date_mismatches_250702.csv"))
+
+mismatch_modelf <- readRDS(here("..", "Rdata", "female_fit_m11.rds"))
+mismatch_modelm <- readRDS(here("..", "Rdata", "male_fit_m11.rds"))
+```
+
+```{r}
+#| label: load-precomputed-draw-helper-individual-trajectories
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show precomputed draw loading helper"
+
+precomputed_draw_dir <- here("..", "Rdata", "precomputed_draws")
+
+read_precomputed_draw <- function(file) {
+  readRDS(file.path(precomputed_draw_dir, file))
+}
+```
+
+::: {.callout-note appearance="simple"}
+The following folded chunk documents the posterior-draw recipe run on `totoro` with `Rscripts/precompute_figure_draws.R`. It assumes the preprocessing objects defined below are available and is kept with `eval: false` for reproducibility; the plotting chunks load the resulting `.rds` files from `Rdata/precomputed_draws`.
+:::
+
+```{r}
+#| label: totoro-individual-trajectory-draw-recipes
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show totoro recipes for individual trajectory draws"
+
+mean_of_original_age_female <- mean(dat_female_mismatch$ori_age)
+age_draws_female <- mismatch_modelf %>%
+  epred_draws(
+    newdata = expand.grid(
+      AGE = seq(min(dat_female_mismatch$AGE), max(dat_female_mismatch$AGE), length.out = 100),
+      TIME = mean(dat_female_mismatch$TIME),
+      AFR = mean(dat_female_mismatch$AFR),
+      LONGEVITY = mean(dat_female_mismatch$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_age = AGE + mean_of_original_age_female)
+
+mean_of_original_age_male <- mean(dat_male_mismatch$ori_age)
+age_draws_male <- mismatch_modelm %>%
+  epred_draws(
+    newdata = expand.grid(
+      AGE = seq(min(dat_male_mismatch$AGE), max(dat_male_mismatch$AGE), length.out = 100),
+      TIME = mean(dat_male_mismatch$TIME),
+      AFR = mean(dat_male_mismatch$AFR),
+      LONGEVITY = mean(dat_male_mismatch$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_age = AGE + mean_of_original_age_male)
+
+set.seed(42)
+rings_to_plot_female <- sample(unique(dat_female_mismatch$RING), 10)
+newdata_grid_female <- expand.grid(
+  AGE = seq(min(dat_female_mismatch$AGE), max(dat_female_mismatch$AGE), length.out = 100),
+  RING = rings_to_plot_female,
+  TIME = mean(dat_female_mismatch$TIME),
+  AFR = mean(dat_female_mismatch$AFR),
+  LONGEVITY = mean(dat_female_mismatch$LONGEVITY)
+)
+individual_predictions_female <- mismatch_modelf %>%
+  add_linpred_draws(newdata = newdata_grid_female, re_formula = ~(1 + AGE | RING)) %>%
+  group_by(RING, AGE) %>%
+  summarise(.value = median(.linpred), .groups = "drop") %>%
+  mutate(actual_age = AGE + mean_of_original_age_female)
+
+set.seed(42)
+rings_to_plot_male <- sample(unique(dat_male_mismatch$RING), 10)
+newdata_grid_male <- expand.grid(
+  AGE = seq(min(dat_male_mismatch$AGE), max(dat_male_mismatch$AGE), length.out = 100),
+  RING = rings_to_plot_male,
+  TIME = mean(dat_male_mismatch$TIME),
+  AFR = mean(dat_male_mismatch$AFR),
+  LONGEVITY = mean(dat_male_mismatch$LONGEVITY)
+)
+individual_predictions_male <- mismatch_modelm %>%
+  add_linpred_draws(newdata = newdata_grid_male, re_formula = ~(1 + AGE | RING)) %>%
+  group_by(RING, AGE) %>%
+  summarise(.value = median(.linpred), .groups = "drop") %>%
+  mutate(actual_age = AGE + mean_of_original_age_male)
+
+saveRDS(age_draws_female, file.path(precomputed_draw_dir, "age_draws_female.rds"))
+saveRDS(age_draws_male, file.path(precomputed_draw_dir, "age_draws_male.rds"))
+saveRDS(individual_predictions_female, file.path(precomputed_draw_dir, "individual_predictions_female_si.rds"))
+saveRDS(individual_predictions_male, file.path(precomputed_draw_dir, "individual_predictions_male_si.rds"))
+```
+
+```{r}
+#| label: preprocess-mismatch-data
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show preprocessing"
+
+dat_female_mismatch <- female_dat_raw %>%
+  filter(SEX == 1) %>%
+  mutate(
+    ori_age = as.numeric(AGE),
+    ori_time = as.numeric(YEAR),
+    TIME = scale(YEAR, center = TRUE, scale = FALSE),
+    AGE = scale(as.numeric(AGE), center = TRUE, scale = FALSE),
+    AFR = scale(as.numeric(AFR), center = TRUE, scale = FALSE),
+    LONGEVITY = scale(as.numeric(LONGEVITY), center = TRUE, scale = FALSE),
+    YEAR = as.factor(YEAR),
+    RING = as.factor(RING)
+  )
+
+dat_male_mismatch <- male_dat_raw %>%
+  filter(SEX == 0) %>%
+  mutate(
+    ori_age = as.numeric(AGE),
+    ori_time = as.numeric(YEAR),
+    TIME = scale(YEAR, center = TRUE, scale = FALSE),
+    AGE = scale(as.numeric(AGE), center = TRUE, scale = FALSE),
+    AFR = scale(as.numeric(AFR), center = TRUE, scale = FALSE),
+    LONGEVITY = scale(as.numeric(LONGEVITY), center = TRUE, scale = FALSE),
+    YEAR = as.factor(YEAR),
+    RING = as.factor(RING)
+  )
+```
+
+## Population-level age trend
+
+The population-level (fixed-effect only, `re_formula = NA`) predicted mismatch trajectory is used as the backdrop for the individual trajectories.
+
+::: panel-tabset
+## Females
+
+```{r}
+#| label: population-age-predictions-females
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show population-level trend code"
+
+age_draws_female <- read_precomputed_draw("age_draws_female.rds")
+```
+
+## Males
+
+```{r}
+#| label: population-age-predictions-males
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show population-level trend code"
+
+age_draws_male <- read_precomputed_draw("age_draws_male.rds")
+```
+:::
+
+## Individual random-slope trajectories
+
+Ten individuals are randomly sampled per sex. Each sampled individual's expected trajectory is evaluated over the full population age grid (not limited to that bird's own observation window), so the lines show the model-implied trajectory each individual's random intercept and age slope predict across the full age range. Predictions include both the individual-level intercept and age slope (`re_formula = ~(1 + AGE | RING)`).
+
+::: panel-tabset
+## Females
+
+```{r}
+#| label: individual-age-predictions-females
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show individual trajectory code"
+
+individual_predictions_female <- read_precomputed_draw("individual_predictions_female_si.rds")
+```
+
+## Males
+
+```{r}
+#| label: individual-age-predictions-males
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show individual trajectory code"
+
+individual_predictions_male <- read_precomputed_draw("individual_predictions_male_si.rds")
+```
+:::
+
+## Plot construction
+
+Each panel shows the population-level trend (ribbon + black line) with the 10 sampled individual trajectories overlaid as coloured lines.
+
+```{r}
+#| label: build-individual-trajectory-panels
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show plot code"
+
+plot_ind_female <- ggplot() +
+  stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = .epred),
+                  .width = 0.95, alpha = 0.3, fill = "#a0786e") +
+  stat_lineribbon(data = age_draws_female, aes(x = actual_age, y = .epred),
+                  fill = NA, color = "black", linewidth = 1) +
+  geom_line(data = individual_predictions_female,
+            aes(x = actual_age, y = .value, group = RING, color = factor(RING)),
+            linewidth = 0.7, alpha = 0.9) +
+  scale_x_continuous(breaks = seq(1, 23, 2), limits = c(1, 23), guide = guide_axis(minor.ticks = TRUE)) +
+  scale_y_continuous(breaks = seq(-90, 210, 30), minor_breaks = seq(-90, 210, 15), limits = c(-90, 210), guide = guide_axis(minor.ticks = TRUE)) +
+  labs(
+    subtitle = "Females",
+    y = "Phenological mismatch (days)",
+    x = "Age (years)"
+  ) +
+  custom_theme() +
+  theme(legend.position = "none", plot.subtitle = element_text(face = "bold"))
+
+plot_ind_male <- ggplot() +
+  stat_lineribbon(data = age_draws_male, aes(x = actual_age, y = .epred),
+                  .width = 0.95, alpha = 0.3, fill = "#a0786e") +
+  stat_lineribbon(data = age_draws_male, aes(x = actual_age, y = .epred),
+                  fill = NA, color = "black", linewidth = 1) +
+  geom_line(data = individual_predictions_male,
+            aes(x = actual_age, y = .value, group = RING, color = factor(RING)),
+            linewidth = 0.7, alpha = 0.9) +
+  scale_x_continuous(breaks = seq(1, 23, 2), limits = c(1, 23), guide = guide_axis(minor.ticks = TRUE)) +
+  scale_y_continuous(breaks = seq(-90, 210, 30), minor_breaks = seq(-90, 210, 15), limits = c(-90, 210), guide = guide_axis(minor.ticks = TRUE)) +
+  labs(
+    subtitle = "Males",
+    y = "Phenological mismatch (days)",
+    x = "Age (years)"
+  ) +
+  custom_theme() +
+  theme(legend.position = "none", plot.subtitle = element_text(face = "bold"))
+```
+
+## Combined figure
+
+The female and male panels are patched together into a single supplementary figure.
+
+```{r}
+#| label: patch-individual-trajectory-figure
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show figure assembly and export code"
+
+fig_SI_individual_trajectories <- plot_ind_female + plot_ind_male +
+  plot_annotation(tag_levels = "A") &
+  theme(plot.tag = element_text(face = "bold"))
+
+fig_SI_individual_trajectories
+
+ggsave(
+  here("..", "Plots", "SI_individual_mismatch_trajectories.pdf"),
+  fig_SI_individual_trajectories,
+  width = 10, height = 5
+)
+ggsave(
+  here("..", "Plots", "SI_individual_mismatch_trajectories.jpg"),
+  fig_SI_individual_trajectories,
+  width = 10, height = 5, dpi = 300
+)
+```
+

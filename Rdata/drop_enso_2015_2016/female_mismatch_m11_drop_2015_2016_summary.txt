@@ -1,0 +1,45 @@
+ Family: gaussian 
+  Links: mu = identity; sigma = log 
+Formula: X5MISMATCH ~ AGE + I(AGE^2) + TIME + AFR + LONGEVITY + (1 + AGE | q | RING) + (1 | YEAR) 
+         sigma ~ 1 + AGE + I(AGE^2) + TIME + (1 | q | RING)
+   Data: data (Number of observations: 8213) 
+  Draws: 4 chains, each with iter = 6000; warmup = 2000; thin = 1;
+         total post-warmup draws = 16000
+
+Multilevel Hyperparameters:
+~RING (Number of levels: 2557) 
+                               Estimate Est.Error l-95% CI u-95% CI Rhat
+sd(Intercept)                     10.35      0.62     9.13    11.57 1.00
+sd(AGE)                            1.06      0.20     0.66     1.43 1.00
+sd(sigma_Intercept)                0.42      0.02     0.39     0.45 1.00
+cor(Intercept,AGE)                 0.43      0.14     0.16     0.72 1.00
+cor(Intercept,sigma_Intercept)     0.83      0.05     0.73     0.91 1.00
+cor(AGE,sigma_Intercept)           0.07      0.13    -0.17     0.33 1.00
+                               Bulk_ESS Tail_ESS
+sd(Intercept)                      2231     5321
+sd(AGE)                            1581     3231
+sd(sigma_Intercept)                4813     8655
+cor(Intercept,AGE)                 1288     3132
+cor(Intercept,sigma_Intercept)      818     1516
+cor(AGE,sigma_Intercept)           3435     5942
+
+~YEAR (Number of levels: 19) 
+              Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+sd(Intercept)    44.39      8.10    31.94    63.49 1.00     3966     7379
+
+Regression Coefficients:
+                Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
+Intercept          43.09     10.21    22.95    63.46 1.00     2077     4071
+sigma_Intercept     3.26      0.02     3.23     3.30 1.00     5694    10934
+AGE                -0.93      0.14    -1.21    -0.66 1.00    12688    12570
+IAGEE2              0.34      0.02     0.30     0.38 1.00    13657    13098
+TIME               -2.37      1.69    -5.72     0.91 1.00     3010     5364
+AFR                 1.12      0.26     0.62     1.63 1.00    12322    11989
+LONGEVITY          -0.18      0.11    -0.39     0.03 1.00    12012    12435
+sigma_AGE          -0.01      0.00    -0.02    -0.01 1.00     9306    11867
+sigma_IAGEE2        0.00      0.00     0.00     0.00 1.00    13446    13885
+sigma_TIME          0.02      0.00     0.02     0.03 1.00     8069    12594
+
+Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
+and Tail_ESS are effective sample size measures, and Rhat is the potential
+scale reduction factor on split chains (at convergence, Rhat = 1).

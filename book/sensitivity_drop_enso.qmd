@@ -1,0 +1,146 @@
+---
+title: "Sensitivity analysis: excluding the 2015-2016 ENSO years"
+subtitle: "Robustness of mismatch and nest-success models to years with very low breeding activity"
+unnumbered: true
+toc: true
+toc-depth: 2
+---
+
+::: lead
+This supplementary analysis evaluates whether the main phenological mismatch and nest-success inferences are sensitive to the unusually poor 2015 and 2016 breeding seasons. These years coincided with a strong ENSO event and had markedly reduced breeding activity, especially in 2016.
+:::
+
+```{r}
+#| label: setup-drop-enso
+#| include: false
+
+library(brms)
+library(here)
+```
+
+## Motivation
+
+Annual sample sizes were uneven across the study period, with 2015 and 2016 having unusually few breeding records relative to most years. To evaluate whether these extreme years disproportionately influenced the main results, we refit the retained model structures after excluding observations from 2015 and 2016.
+
+The descriptive distribution of fledging outcomes by year is reproduced below as a visual reference for the imbalance in breeding activity and fledging outcomes across the time series.
+
+```{r}
+#| label: fig-drop-enso-fledging-outcomes-reference
+#| echo: false
+#| out-width: "90%"
+#| fig-cap: "Observed fledging outcomes per year for female and male boobies. The sparse 2015-2016 period motivates the supplementary sensitivity analysis excluding those ENSO years."
+
+knitr::include_graphics(here::here("..", "Plots", "fledging_outcomes_per_year.jpg"))
+```
+
+## Sensitivity model formulas
+
+The sensitivity analyses use the same retained model structures as the main analysis, with the only data change being the exclusion of records from 2015 and 2016.
+
+### Phenological mismatch
+
+The retained phenological mismatch model is the Gaussian location-scale `m11` structure. It is refit separately for females and males:
+
+```{r}
+#| label: formula-drop-enso-mismatch
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show mismatch sensitivity formula"
+
+mismatch_formula <- bf(
+  X5MISMATCH ~ AGE + I(AGE^2) + TIME + AFR + LONGEVITY +
+    (1 + AGE | q | RING) + (1 | YEAR),
+  sigma ~ 1 + AGE + I(AGE^2) + TIME + (1 | q | RING)
+)
+```
+
+### Nest success
+
+Nest success was modeled as the ordered fledging outcome (`FLEDS`: 0, 1, 2, or 3 fledglings) using the retained cumulative probit `Q17` structure. It is also refit separately for females and males:
+
+```{r}
+#| label: formula-drop-enso-nest-success
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show nest-success sensitivity formula"
+
+nest_success_formula <- bf(
+  FLEDS ~ ZX5MISMATCH + I(ZX5MISMATCH^2) + TIME + AGE + I(AGE^2) + AFR + LONGEVITY +
+    (1 | q | RING) + (1 | YEAR),
+  disc ~ 1 + ZX5MISMATCH + AGE + TIME + (1 | q | RING)
+)
+```
+
+## Fitting script
+
+The models are fit with the same sampling settings as the main analysis: 6,000 iterations, 2,000 warmup iterations, 4 chains, seed 123, zero initialization, `adapt_delta = 0.99`, and `max_treedepth = 15`. For speed, the supplementary script uses the `cmdstanr` backend with within-chain threading.
+
+```{r}
+#| label: fit-drop-enso-models
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show remote fitting command"
+
+# On totoro, from /home/ortegara/bfb_drop_enso_2015_2016:
+system2(
+  "Rscript",
+  c(
+    "Rscripts/sensitivity_drop_enso_2015_2016.R",
+    "data/Lay_date_mismatches_250702.csv",
+    "Rdata/drop_enso_2015_2016",
+    "12"
+  )
+)
+```
+
+## Model summaries
+
+### Phenological mismatch
+
+```{r}
+#| label: summary-drop-enso-mismatch-female
+#| eval: true
+
+female_mismatch_drop_enso <- readRDS(
+  here::here("..", "Rdata", "drop_enso_2015_2016", "female_mismatch_m11_drop_2015_2016.rds")
+)
+
+summary(female_mismatch_drop_enso)
+```
+
+```{r}
+#| label: summary-drop-enso-mismatch-male
+#| eval: true
+
+male_mismatch_drop_enso <- readRDS(
+  here::here("..", "Rdata", "drop_enso_2015_2016", "male_mismatch_m11_drop_2015_2016.rds")
+)
+
+summary(male_mismatch_drop_enso)
+```
+
+### Nest success
+
+```{r}
+#| label: summary-drop-enso-nest-success-female
+#| eval: false
+
+female_nest_success_drop_enso <- readRDS(
+  here::here("..", "Rdata", "drop_enso_2015_2016", "female_fledging_Q17_drop_2015_2016.rds")
+)
+
+summary(female_nest_success_drop_enso)
+```
+
+```{r}
+#| label: summary-drop-enso-nest-success-male
+#| eval: false
+
+male_nest_success_drop_enso <- readRDS(
+  here::here("..", "Rdata", "drop_enso_2015_2016", "male_fledging_Q17_drop_2015_2016.rds")
+)
+
+summary(male_nest_success_drop_enso)
+```
+
+## 

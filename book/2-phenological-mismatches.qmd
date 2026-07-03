@@ -177,6 +177,149 @@ ggsave(filename = here("..","Plots", "mismatch_thresholds.jpg"),
        dpi = 300)
 ```
 
+## S2.3 Breeding records per year
+
+The number of breeding records was summarized by year and sex to evaluate whether the dataset is strongly imbalanced across the study period.
+
+```{r}
+#| label: fig-breeding-records-per-year
+#| fig-width: 9
+#| fig-height: 4.5
+#| fig-cap: "Number of breeding records per year for female and male boobies. Counts are shown separately by sex to visualize temporal imbalance in sampling effort or available breeding records."
+#| code-fold: true
+#| code-summary: "Show plotting code"
+
+record_count_data <- dat %>%
+  filter(SEX %in% c(0, 1), !is.na(YEAR)) %>%
+  mutate(
+    Year = as.integer(YEAR),
+    Sex_Label = factor(if_else(SEX == 0, "Males", "Females"),
+                       levels = c("Females", "Males"))
+  )
+
+record_count_plot <- ggplot(record_count_data, aes(x = Year)) +
+  geom_histogram(
+    binwidth = 1,
+    boundary = 0.5,
+    closed = "right",
+    fill = "#4C78A8",
+    color = "white",
+    linewidth = 0.25
+  ) +
+  facet_wrap(~ Sex_Label, ncol = 1) +
+  scale_x_continuous(
+    breaks = seq(min(record_count_data$Year), max(record_count_data$Year), by = 2),
+    minor_breaks = seq(min(record_count_data$Year), max(record_count_data$Year), by = 1)
+  ) +
+  labs(
+    title = "",
+    x = "Year",
+    y = "Breeding records"
+  ) +
+  theme_light() +
+  theme(
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor.x = element_blank()
+  )
+
+print(record_count_plot)
+```
+
+```{r}
+#| label: save-breeding-records-per-year-plot
+#| eval: false
+
+ggsave(filename = here("..","Plots", "breeding_records_per_year.pdf"),
+       plot = record_count_plot,
+       width = 9,
+       height = 4.5,
+       dpi = 300, device = cairo_pdf)
+
+ggsave(filename = here("..","Plots", "breeding_records_per_year.jpg"),
+       plot = record_count_plot,
+       width = 9,
+       height = 4.5,
+       dpi = 300)
+```
+
+## S2.4 Fledging outcomes per year
+
+Fledging success outcomes were summarized by year and sex to show whether the distribution of observed outcomes changes across the study period.
+
+```{r}
+#| label: fig-fledging-outcomes-per-year
+#| fig-width: 9
+#| fig-height: 4.5
+#| fig-cap: "Observed fledging outcomes per year for female and male boobies. Stacked bars show the number of breeding records associated with each fledging outcome."
+#| code-fold: true
+#| code-summary: "Show plotting code"
+
+fledging_outcome_data <- dat %>%
+  filter(
+    SEX %in% c(0, 1),
+    !is.na(YEAR),
+    !is.na(FLEDS)
+  ) %>%
+  mutate(
+    Year = as.integer(YEAR),
+    Sex_Label = factor(if_else(SEX == 0, "Males", "Females"),
+                       levels = c("Females", "Males")),
+    Fledglings = factor(FLEDS,
+                        levels = c(0, 1, 2, 3),
+                        labels = c("0 fledglings", "1 fledgling", "2 fledglings", "3 fledglings"))
+  ) %>%
+  count(Sex_Label, Year, Fledglings, name = "records")
+
+fledging_palette <- c(
+  "0 fledglings" = "#4C78A8",
+  "1 fledgling" = "#F58518",
+  "2 fledglings" = "#54A24B",
+  "3 fledglings" = "#B279A2"
+)
+
+fledging_outcomes_per_year_plot <- ggplot(
+  fledging_outcome_data,
+  aes(x = Year, y = records, fill = Fledglings)
+) +
+  geom_col(width = 0.9, color = "white", linewidth = 0.2) +
+  facet_wrap(~ Sex_Label, ncol = 1) +
+  scale_x_continuous(
+    breaks = seq(min(fledging_outcome_data$Year), max(fledging_outcome_data$Year), by = 2),
+    minor_breaks = seq(min(fledging_outcome_data$Year), max(fledging_outcome_data$Year), by = 1)
+  ) +
+  scale_fill_manual(name = "Outcome", values = fledging_palette, drop = FALSE) +
+  labs(
+    title = "",
+    x = "Year",
+    y = "Breeding records"
+  ) +
+  theme_light() +
+  theme(
+    legend.position = "right",
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor.x = element_blank()
+  )
+
+print(fledging_outcomes_per_year_plot)
+```
+
+```{r}
+#| label: save-fledging-outcomes-per-year-plot
+#| eval: false
+
+ggsave(filename = here("..","Plots", "fledging_outcomes_per_year.pdf"),
+       plot = fledging_outcomes_per_year_plot,
+       width = 9,
+       height = 4.5,
+       dpi = 300, device = cairo_pdf)
+
+ggsave(filename = here("..","Plots", "fledging_outcomes_per_year.jpg"),
+       plot = fledging_outcomes_per_year_plot,
+       width = 9,
+       height = 4.5,
+       dpi = 300)
+```
+
 
 ## Reproducibility
 

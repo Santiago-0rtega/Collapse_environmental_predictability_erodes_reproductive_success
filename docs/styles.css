@@ -1,26 +1,28 @@
 /* =========================
    ROOT VARIABLES
+   (palette matched to santiago-0rtega.github.io: sage green / cream / dark forest)
 ========================= */
 :root {
-  --bfb-deep: #123b4a;
-  --bfb-ocean: #1f5c73;
-  --bfb-sea: #2d7d8c;
-  --bfb-light: #eaf4f6;
-  --bfb-sand: #f7f4ee;
-  --bfb-accent: #d88c3a;
-  --bfb-text: #24343b;
-  --bfb-muted: #5f727a;
-  --bfb-border: #d7e3e8;
-  --bfb-shadow: 0 10px 30px rgba(18, 59, 74, 0.08);
-  --bfb-radius: 14px;
+  --bfb-deep: #192219;
+  --bfb-ocean: #2a5f40;
+  --bfb-sea: #3d8a5e;
+  --bfb-light: #e4f0e8;
+  --bfb-sand: #f5f2eb;
+  --bfb-accent: #c06b10;
+  --bfb-text: #1a2418;
+  --bfb-muted: #55685c;
+  --bfb-border: #dbd7ce;
+  --bfb-shadow: 0 4px 20px rgba(25, 34, 25, 0.08);
+  --bfb-radius: 6px;
 }
 
 /* =========================
    GLOBAL
 ========================= */
 body {
+  font-family: "Fira Sans", sans-serif;
   color: var(--bfb-text);
-  background-color: #fcfcfb;
+  background-color: var(--bfb-sand);
   text-rendering: optimizeLegibility;
 }
 
@@ -42,9 +44,10 @@ a:hover {
    TYPOGRAPHY
 ========================= */
 h1, h2, h3, h4 {
+  font-family: "Cormorant Garamond", serif;
   color: var(--bfb-deep);
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  font-weight: 600;
+  letter-spacing: -0.005em;
 }
 
 h1.title {
@@ -62,7 +65,7 @@ h1.title {
 h2 {
   margin-top: 2.2rem;
   padding-bottom: 0.25rem;
-  border-bottom: 2px solid rgba(31, 92, 115, 0.08);
+  border-bottom: 2px solid rgba(42, 95, 64, 0.08);
 }
 
 h3 {
@@ -86,7 +89,7 @@ p {
 .navbar {
   backdrop-filter: blur(8px);
   background-color: rgba(255, 255, 255, 0.88) !important;
-  border-bottom: 1px solid rgba(18, 59, 74, 0.08);
+  border-bottom: 1px solid rgba(25, 34, 25, 0.08);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
 }
 
@@ -99,7 +102,7 @@ p {
    SIDEBAR
 ========================= */
 .sidebar {
-  border-right: 1px solid rgba(18, 59, 74, 0.08);
+  border-right: 1px solid rgba(25, 34, 25, 0.08);
 }
 
 .sidebar-navigation .sidebar-item-text {
@@ -120,7 +123,7 @@ p {
 
 .sidebar-item-container .active,
 .sidebar nav[role="doc-toc"] .active {
-  background-color: rgba(45, 125, 140, 0.12);
+  background-color: rgba(61, 138, 94, 0.12);
   color: var(--bfb-deep) !important;
   font-weight: 600;
   border-left: 3px solid var(--bfb-sea);
@@ -131,7 +134,7 @@ p {
 ========================= */
 .quarto-title-banner {
   background:
-    linear-gradient(135deg, rgba(18,59,74,0.95), rgba(31,92,115,0.88)),
+    linear-gradient(135deg, rgba(25,34,25,0.95), rgba(42,95,64,0.88)),
     url("images/Sula.JPG") center/cover no-repeat;
   color: white;
   padding-top: 5rem;
@@ -144,12 +147,26 @@ p {
 .quarto-title-banner .subtitle,
 .quarto-title-banner .quarto-categories,
 .quarto-title-banner .author,
-.quarto-title-banner .date {
+.quarto-title-banner .date,
+.quarto-title-banner .code-tools-button {
   color: white !important;
 }
 
 .quarto-title-meta-heading {
-  color: rgba(255,255,255,0.85) !important;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bfb-muted) !important;
+}
+
+.quarto-title-meta-contents {
+  color: var(--bfb-text);
+}
+
+.quarto-title-meta {
+  padding-top: 1.5rem;
+  padding-bottom: 0.5rem;
 }
 
 /* =========================
@@ -161,7 +178,7 @@ p {
 }
 
 .figure img {
-  border-radius: 12px;
+  border-radius: 6px;
   box-shadow: var(--bfb-shadow);
 }
 
@@ -177,7 +194,7 @@ figcaption,
    TABLES
 ========================= */
 .table {
-  border-radius: 12px;
+  border-radius: 6px;
   overflow: hidden;
   box-shadow: var(--bfb-shadow);
   background: white;
@@ -195,7 +212,7 @@ thead {
    CODE
 ========================= */
 pre, code {
-  border-radius: 10px;
+  border-radius: 4px;
 }
 
 div.sourceCode,
@@ -206,7 +223,7 @@ pre.sourceCode {
 
 code {
   color: var(--bfb-ocean);
-  background-color: rgba(31, 92, 115, 0.06);
+  background-color: rgba(42, 95, 64, 0.06);
   padding: 0.15rem 0.35rem;
 }
 
@@ -245,9 +262,9 @@ code {
 ========================= */
 blockquote {
   border-left: 4px solid var(--bfb-accent);
-  background: #fffaf5;
+  background: #fdf0e3;
   padding: 1rem 1.25rem;
-  border-radius: 10px;
+  border-radius: 4px;
   color: #5b4a37;
 }
 
@@ -255,7 +272,7 @@ blockquote {
    BUTTONS / LISTING LINKS
 ========================= */
 .btn, .quarto-btn {
-  border-radius: 999px;
+  border-radius: 4px;
   font-weight: 600;
 }
 
@@ -264,8 +281,8 @@ blockquote {
 ========================= */
 .grid-card {
   background: white;
-  border: 1px solid rgba(18, 59, 74, 0.08);
-  border-radius: 16px;
+  border: 1px solid rgba(25, 34, 25, 0.08);
+  border-radius: 6px;
   padding: 1.25rem 1.25rem 1rem 1.25rem;
   box-shadow: var(--bfb-shadow);
   height: 100%;
@@ -274,7 +291,7 @@ blockquote {
 
 .grid-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 30px rgba(18, 59, 74, 0.12);
+  box-shadow: 0 14px 30px rgba(25, 34, 25, 0.12);
 }
 
 .grid-card h3 {
@@ -304,43 +321,119 @@ blockquote {
    FOOTER FEEL
 ========================= */
 .nav-footer {
-  border-top: 1px solid rgba(18, 59, 74, 0.08);
+  border-top: 1px solid rgba(25, 34, 25, 0.08);
   color: var(--bfb-muted);
   margin-top: 3rem;
 }
 
 /* =========================
-   DARK MODE TWEAKS
+   HERO PHOTO (index lead section)
 ========================= */
-[data-bs-theme="dark"] body {
-  background-color: #11171a;
+.hero-photo {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: var(--bfb-shadow);
 }
 
-[data-bs-theme="dark"] .navbar {
-  background-color: rgba(20, 25, 28, 0.92) !important;
+/* =========================
+   LAB AFFILIATION
+========================= */
+.lab-affiliation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--bfb-border);
+  flex-wrap: wrap;
 }
 
-[data-bs-theme="dark"] .grid-card,
-[data-bs-theme="dark"] .callout,
-[data-bs-theme="dark"] .table {
-  background-color: #182126;
+.lab-affiliation img {
+  height: 64px;
+  width: auto;
+}
+
+.lab-affiliation p {
+  font-size: 0.85rem;
+  color: var(--bfb-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+/* =========================
+   DARK MODE TWEAKS
+   Quarto toggles `body.quarto-dark` / `body.quarto-light` via JS
+   (NOT the `[data-bs-theme]` attribute, which Quarto only sets on
+   the navbar). Selectors below must match that body class or they
+   silently never apply.
+========================= */
+body.quarto-dark {
+  background-color: #10160f;
+  color: #d4dde0;
+}
+
+body.quarto-dark .navbar {
+  background-color: rgba(25, 34, 25, 0.92) !important;
+}
+
+body.quarto-dark .sidebar {
+  border-right-color: rgba(255, 255, 255, 0.08);
+}
+
+body.quarto-dark .grid-card,
+body.quarto-dark .callout,
+body.quarto-dark .table {
+  background-color: #1c241c;
   box-shadow: none;
   border-color: rgba(255,255,255,0.08);
 }
 
-[data-bs-theme="dark"] code {
-  background-color: rgba(255,255,255,0.08);
+body.quarto-dark div.sourceCode,
+body.quarto-dark pre.sourceCode {
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: none;
 }
 
-[data-bs-theme="dark"] h1,
-[data-bs-theme="dark"] h2,
-[data-bs-theme="dark"] h3,
-[data-bs-theme="dark"] h4 {
+body.quarto-dark code {
+  background-color: rgba(255,255,255,0.08);
+  color: #9fd8b8;
+}
+
+body.quarto-dark blockquote {
+  background: #241c14;
+  color: #e0d3c2;
+}
+
+body.quarto-dark h1,
+body.quarto-dark h2,
+body.quarto-dark h3,
+body.quarto-dark h4 {
   color: #edf7fa;
 }
 
-[data-bs-theme="dark"] p,
-[data-bs-theme="dark"] li,
-[data-bs-theme="dark"] figcaption {
+body.quarto-dark .subtitle,
+body.quarto-dark .lead {
+  color: #a9b8ae;
+}
+
+body.quarto-dark p,
+body.quarto-dark li,
+body.quarto-dark figcaption {
   color: #d4dde0;
+}
+
+body.quarto-dark .grid-card p,
+body.quarto-dark .lab-affiliation p {
+  color: #a9b8ae;
+}
+
+body.quarto-dark a {
+  color: #6fbf8e;
+}
+
+body.quarto-dark a:hover {
+  color: var(--bfb-accent);
 }

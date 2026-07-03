@@ -149,6 +149,289 @@ fledging_modelm <- readRDS(here("..","Rdata", "male_fit_Q17.rds"))
 ```
 :::
 
+### Precomputed posterior draws
+
+Posterior draws used for plotting are precomputed on `totoro` and saved as `.rds` files. This keeps local figure editing fast because plot chunks can load the draw objects directly instead of recalculating them from the fitted models.
+
+```{r}
+#| label: load-precomputed-draw-helper
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show precomputed draw loading helper"
+
+precomputed_draw_dir <- here("..", "Rdata", "precomputed_draws")
+
+read_precomputed_draw <- function(file) {
+  readRDS(file.path(precomputed_draw_dir, file))
+}
+```
+
+::: {.callout-note appearance="simple"}
+The following folded chunks document the posterior-draw recipes that were run on `totoro` using `Rscripts/precompute_figure_draws.R`. They assume the preprocessing objects defined below are available and are kept with `eval: false` so the website records how each `.rds` object was generated, while the plotting chunks load the precomputed files from `Rdata/precomputed_draws`.
+:::
+
+```{r}
+#| label: totoro-figure2-draw-recipes
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show totoro recipes for Figure 2 posterior draws"
+
+mean_bloom_year <- mean(bloom_dat$season_year)
+bloom_time_draws <- bloom_model %>%
+  epred_draws(
+    newdata = expand.grid(TIME = seq(min(bloom_dat$TIME), max(bloom_dat$TIME), length.out = 100)),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_year = TIME + mean_bloom_year)
+
+mean_mismatch_yearf <- mean(dat_female_mismatch$ori_time)
+mismatch_time_drawsf <- mismatch_modelf %>%
+  epred_draws(
+    newdata = expand.grid(
+      TIME = seq(min(dat_female_mismatch$TIME), max(dat_female_mismatch$TIME), length.out = 100),
+      AGE = mean(dat_female_mismatch$AGE),
+      AFR = mean(dat_female_mismatch$AFR),
+      LONGEVITY = mean(dat_female_mismatch$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_time = TIME + mean_mismatch_yearf)
+
+mean_mismatch_yearm <- mean(dat_male_mismatch$ori_time)
+mismatch_time_drawsm <- mismatch_modelm %>%
+  epred_draws(
+    newdata = expand.grid(
+      TIME = seq(min(dat_male_mismatch$TIME), max(dat_male_mismatch$TIME), length.out = 100),
+      AGE = mean(dat_male_mismatch$AGE),
+      AFR = mean(dat_male_mismatch$AFR),
+      LONGEVITY = mean(dat_male_mismatch$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_time = TIME + mean_mismatch_yearm)
+
+mean_fledging_yearf <- mean(dat_female_fledging$ori_time)
+fledging_time_drawsf <- fledging_modelf %>%
+  epred_draws(
+    newdata = expand.grid(
+      TIME = seq(min(dat_female_fledging$TIME), max(dat_female_fledging$TIME), length.out = 100),
+      AGE = mean(dat_female_fledging$AGE),
+      ZX5MISMATCH = mean(dat_female_fledging$ZX5MISMATCH),
+      AFR = mean(dat_female_fledging$AFR),
+      LONGEVITY = mean(dat_female_fledging$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_time = TIME + mean_fledging_yearf)
+
+fledging_success_drawsf <- fledging_time_drawsf %>%
+  filter(.category != "0") %>%
+  group_by(across(-c(.epred, .category))) %>%
+  summarize(prob_success = sum(.epred), .groups = "drop")
+
+mean_fledging_yearm <- mean(dat_male_fledging$ori_time)
+fledging_time_drawsm <- fledging_modelm %>%
+  epred_draws(
+    newdata = expand.grid(
+      TIME = seq(min(dat_male_fledging$TIME), max(dat_male_fledging$TIME), length.out = 100),
+      AGE = mean(dat_male_fledging$AGE),
+      ZX5MISMATCH = mean(dat_male_fledging$ZX5MISMATCH),
+      AFR = mean(dat_male_fledging$AFR),
+      LONGEVITY = mean(dat_male_fledging$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_time = TIME + mean_fledging_yearm)
+
+fledging_success_drawsm <- fledging_time_drawsm %>%
+  filter(.category != "0") %>%
+  group_by(across(-c(.epred, .category))) %>%
+  summarize(prob_success = sum(.epred), .groups = "drop")
+
+saveRDS(bloom_time_draws, file.path(precomputed_draw_dir, "bloom_time_draws.rds"))
+saveRDS(mismatch_time_drawsf, file.path(precomputed_draw_dir, "mismatch_time_drawsf.rds"))
+saveRDS(mismatch_time_drawsm, file.path(precomputed_draw_dir, "mismatch_time_drawsm.rds"))
+saveRDS(fledging_time_drawsf, file.path(precomputed_draw_dir, "fledging_time_drawsf.rds"))
+saveRDS(fledging_success_drawsf, file.path(precomputed_draw_dir, "fledging_success_drawsf.rds"))
+saveRDS(fledging_time_drawsm, file.path(precomputed_draw_dir, "fledging_time_drawsm.rds"))
+saveRDS(fledging_success_drawsm, file.path(precomputed_draw_dir, "fledging_success_drawsm.rds"))
+```
+
+```{r}
+#| label: totoro-figure3-draw-recipes
+#| eval: false
+#| code-fold: true
+#| code-summary: "Show totoro recipes for Figure 3 posterior draws"
+
+mean_of_original_age_female <- mean(dat_female_mismatch$ori_age)
+age_draws_female <- mismatch_modelf %>%
+  epred_draws(
+    newdata = expand.grid(
+      AGE = seq(min(dat_female_mismatch$AGE), max(dat_female_mismatch$AGE), length.out = 100),
+      TIME = mean(dat_female_mismatch$TIME),
+      AFR = mean(dat_female_mismatch$AFR),
+      LONGEVITY = mean(dat_female_mismatch$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_age = AGE + mean_of_original_age_female)
+
+mean_of_original_age_male <- mean(dat_male_mismatch$ori_age)
+age_draws_male <- mismatch_modelm %>%
+  epred_draws(
+    newdata = expand.grid(
+      AGE = seq(min(dat_male_mismatch$AGE), max(dat_male_mismatch$AGE), length.out = 100),
+      TIME = mean(dat_male_mismatch$TIME),
+      AFR = mean(dat_male_mismatch$AFR),
+      LONGEVITY = mean(dat_male_mismatch$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_age = AGE + mean_of_original_age_male)
+
+set.seed(42)
+rings_to_plot_female <- sample(unique(dat_female_mismatch$RING), 50)
+newdata_grid_female <- expand.grid(
+  AGE = seq(min(dat_female_mismatch$AGE), max(dat_female_mismatch$AGE), length.out = 100),
+  RING = rings_to_plot_female,
+  TIME = mean(dat_female_mismatch$TIME),
+  AFR = mean(dat_female_mismatch$AFR),
+  LONGEVITY = mean(dat_female_mismatch$LONGEVITY)
+)
+individual_predictions_female <- mismatch_modelf %>%
+  add_linpred_draws(newdata = newdata_grid_female, re_formula = ~(1 + AGE | RING)) %>%
+  group_by(RING, AGE) %>%
+  summarise(.value = median(.linpred), .groups = "drop") %>%
+  mutate(actual_age = AGE + mean_of_original_age_female)
+
+set.seed(42)
+rings_to_plot_male <- sample(unique(dat_male_mismatch$RING), 50)
+newdata_grid_male <- expand.grid(
+  AGE = seq(min(dat_male_mismatch$AGE), max(dat_male_mismatch$AGE), length.out = 100),
+  RING = rings_to_plot_male,
+  TIME = mean(dat_male_mismatch$TIME),
+  AFR = mean(dat_male_mismatch$AFR),
+  LONGEVITY = mean(dat_male_mismatch$LONGEVITY)
+)
+individual_predictions_male <- mismatch_modelm %>%
+  add_linpred_draws(newdata = newdata_grid_male, re_formula = ~(1 + AGE | RING)) %>%
+  group_by(RING, AGE) %>%
+  summarise(.value = median(.linpred), .groups = "drop") %>%
+  mutate(actual_age = AGE + mean_of_original_age_male)
+
+mean_of_original_fledging_agef <- mean(dat_female_fledging$ori_age)
+fledging_age_drawsf <- fledging_modelf %>%
+  epred_draws(
+    newdata = expand.grid(
+      AGE = seq(min(dat_female_fledging$AGE), max(dat_female_fledging$AGE), length.out = 100),
+      TIME = mean(dat_female_fledging$TIME),
+      ZX5MISMATCH = mean(dat_female_fledging$ZX5MISMATCH),
+      AFR = mean(dat_female_fledging$AFR),
+      LONGEVITY = mean(dat_female_fledging$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_age = AGE + mean_of_original_fledging_agef)
+
+fledging_success_draws_agef <- fledging_age_drawsf %>%
+  filter(.category != "0") %>%
+  group_by(across(-c(.epred, .category))) %>%
+  summarize(prob_success = sum(.epred), .groups = "drop")
+
+mean_of_original_fledging_agem <- mean(dat_male_fledging$ori_age)
+fledging_age_drawsm <- fledging_modelm %>%
+  epred_draws(
+    newdata = expand.grid(
+      AGE = seq(min(dat_male_fledging$AGE), max(dat_male_fledging$AGE), length.out = 100),
+      TIME = mean(dat_male_fledging$TIME),
+      ZX5MISMATCH = mean(dat_male_fledging$ZX5MISMATCH),
+      AFR = mean(dat_male_fledging$AFR),
+      LONGEVITY = mean(dat_male_fledging$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_age = AGE + mean_of_original_fledging_agem)
+
+fledging_success_draws_agem <- fledging_age_drawsm %>%
+  filter(.category != "0") %>%
+  group_by(across(-c(.epred, .category))) %>%
+  summarize(prob_success = sum(.epred), .groups = "drop")
+
+mean_of_original_mismatchf <- mean(dat_female_fledging$X5MISMATCH, na.rm = TRUE)
+mismatch_drawsf <- fledging_modelf %>%
+  epred_draws(
+    newdata = expand.grid(
+      ZX5MISMATCH = seq(min(dat_female_fledging$ZX5MISMATCH), max(dat_female_fledging$ZX5MISMATCH), length.out = 100),
+      TIME = mean(dat_female_fledging$TIME),
+      AGE = mean(dat_female_fledging$AGE),
+      AFR = mean(dat_female_fledging$AFR),
+      LONGEVITY = mean(dat_female_fledging$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_mismatch = ZX5MISMATCH + mean_of_original_mismatchf)
+
+fledging_grouped_drawsf <- mismatch_drawsf %>%
+  mutate(fled_group = case_when(
+    .category == "0" ~ "0",
+    .category %in% c("1", "2") ~ "1-2",
+    .category == "3" ~ "3",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(fled_group)) %>%
+  group_by(actual_mismatch, .draw, fled_group) %>%
+  summarize(prob_val = sum(.epred), .groups = "drop")
+
+mean_of_original_mismatchm <- mean(dat_male_fledging$X5MISMATCH, na.rm = TRUE)
+mismatch_drawsm <- fledging_modelm %>%
+  epred_draws(
+    newdata = expand.grid(
+      ZX5MISMATCH = seq(min(dat_male_fledging$ZX5MISMATCH), max(dat_male_fledging$ZX5MISMATCH), length.out = 100),
+      TIME = mean(dat_male_fledging$TIME),
+      AGE = mean(dat_male_fledging$AGE),
+      AFR = mean(dat_male_fledging$AFR),
+      LONGEVITY = mean(dat_male_fledging$LONGEVITY)
+    ),
+    re_formula = NA,
+    dpar = TRUE
+  ) %>%
+  mutate(actual_mismatch = ZX5MISMATCH + mean_of_original_mismatchm)
+
+fledging_grouped_drawsm <- mismatch_drawsm %>%
+  mutate(fled_group = case_when(
+    .category == "0" ~ "0",
+    .category %in% c("1", "2") ~ "1-2",
+    .category == "3" ~ "3",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(fled_group)) %>%
+  group_by(actual_mismatch, .draw, fled_group) %>%
+  summarize(prob_val = sum(.epred), .groups = "drop")
+
+saveRDS(age_draws_female, file.path(precomputed_draw_dir, "age_draws_female.rds"))
+saveRDS(age_draws_male, file.path(precomputed_draw_dir, "age_draws_male.rds"))
+saveRDS(individual_predictions_female, file.path(precomputed_draw_dir, "individual_predictions_female.rds"))
+saveRDS(individual_predictions_male, file.path(precomputed_draw_dir, "individual_predictions_male.rds"))
+saveRDS(fledging_age_drawsf, file.path(precomputed_draw_dir, "fledging_age_drawsf.rds"))
+saveRDS(fledging_success_draws_agef, file.path(precomputed_draw_dir, "fledging_success_draws_agef.rds"))
+saveRDS(fledging_age_drawsm, file.path(precomputed_draw_dir, "fledging_age_drawsm.rds"))
+saveRDS(fledging_success_draws_agem, file.path(precomputed_draw_dir, "fledging_success_draws_agem.rds"))
+saveRDS(mismatch_drawsf, file.path(precomputed_draw_dir, "mismatch_drawsf.rds"))
+saveRDS(fledging_grouped_drawsf, file.path(precomputed_draw_dir, "fledging_grouped_drawsf.rds"))
+saveRDS(mismatch_drawsm, file.path(precomputed_draw_dir, "mismatch_drawsm.rds"))
+saveRDS(fledging_grouped_drawsm, file.path(precomputed_draw_dir, "fledging_grouped_drawsm.rds"))
+```
+
 ## Data preprocessing
 
 Raw data were transformed to create the variables used for plotting and model-based prediction.
@@ -259,14 +542,7 @@ This figure summarizes temporal trends in bloom timing, phenological mismatch, a
 #| code-summary: "Show bloom prediction code"
 
 # --- Panel A-B: Bloom onset mean and predictability over time ---
-mean_bloom_year <- mean(bloom_dat$season_year)
-bloom_time_draws <- bloom_model %>%
-  epred_draws(
-    newdata = expand.grid(TIME = seq(min(bloom_dat$TIME), max(bloom_dat$TIME), length.out = 100)),
-    re_formula = NA,
-    dpar = TRUE
-  ) %>%
-  mutate(actual_year = TIME + mean_bloom_year)
+bloom_time_draws <- read_precomputed_draw("bloom_time_draws.rds")
 ```
 
 ## Bloom timing panels
@@ -344,19 +620,7 @@ Similarly, predictions are generated for phenological mismatch (.epred) and its 
 
 
 # --- Panel C: Consistency of synchrony (mismatch variance) ---
-mean_mismatch_yearf <- mean(dat_female_mismatch$ori_time)
-mismatch_time_drawsf <- mismatch_modelf %>%
-  epred_draws(
-    newdata = expand.grid(
-      TIME = seq(min(dat_female_mismatch$TIME), max(dat_female_mismatch$TIME), length.out = 100),
-      AGE = mean(dat_female_mismatch$AGE),
-      AFR = mean(dat_female_mismatch$AFR),
-      LONGEVITY = mean(dat_female_mismatch$LONGEVITY)
-    ),
-    re_formula = NA,
-    dpar = TRUE
-  ) %>%
-  mutate(actual_time = TIME + mean_mismatch_yearf)
+mismatch_time_drawsf <- read_precomputed_draw("mismatch_time_drawsf.rds")
 ```
 
 ## Males
@@ -367,19 +631,7 @@ mismatch_time_drawsf <- mismatch_modelf %>%
 #| warning: false
 #| eval: false
 
-mean_mismatch_yearm <- mean(dat_male_mismatch$ori_time)
-mismatch_time_drawsm <- mismatch_modelm %>%
-  epred_draws(
-    newdata = expand.grid(
-      TIME = seq(min(dat_male_mismatch$TIME), max(dat_male_mismatch$TIME), length.out = 100),
-      AGE = mean(dat_male_mismatch$AGE),
-      AFR = mean(dat_male_mismatch$AFR),
-      LONGEVITY = mean(dat_male_mismatch$LONGEVITY)
-    ),
-    re_formula = NA,
-    dpar = TRUE
-  ) %>%
-  mutate(actual_time = TIME + mean_mismatch_yearm)
+mismatch_time_drawsm <- read_precomputed_draw("mismatch_time_drawsm.rds")
 
 ```
 :::
@@ -519,19 +771,7 @@ Next, predictions are generated for fledgling success over time. This includes t
 #| eval: false
 
 # --- Panel E-F: Fledging success (mean trend) ---
-mean_fledging_yearf <- mean(dat_female_fledging$ori_time)
-fledging_time_drawsf <- fledging_modelf %>%
-  epred_draws(
-    newdata = expand.grid(
-      TIME = seq(min(dat_female_fledging$TIME), max(dat_female_fledging$TIME), length.out = 100),
-      AGE = mean(dat_female_fledging$AGE),
-      ZX5MISMATCH = mean(dat_female_fledging$ZX5MISMATCH),
-      AFR = mean(dat_female_fledging$AFR),
-      LONGEVITY = mean(dat_female_fledging$LONGEVITY)
-    ),
-    re_formula = NA, dpar = TRUE
-  ) %>%
-  mutate(actual_time = TIME + mean_fledging_yearf)
+fledging_time_drawsf <- read_precomputed_draw("fledging_time_drawsf.rds")
 
 # Calculate observed proportions for raw points
 fledging_props_timef <- dat_female_fledging %>%
@@ -541,11 +781,8 @@ fledging_props_timef <- dat_female_fledging %>%
 
 
 
-# 1. Calculate posterior draws for "success" (fledglings > 0)
-fledging_success_drawsf <- fledging_time_drawsf %>%
-  filter(.category != "0") %>%
-  group_by(across(-c(.epred, .category))) %>% # Groups by all cols except .epred & .category
-  summarize(prob_success = sum(.epred), .groups = 'drop')
+# 1. Load posterior draws for "success" (fledglings > 0)
+fledging_success_drawsf <- read_precomputed_draw("fledging_success_drawsf.rds")
 
 # 2. Calculate observed proportions for "success"
 fledging_success_props_timef <- dat_female_fledging %>%
@@ -567,6 +804,34 @@ success_label_dataf <- fledging_success_drawsf %>%
   summarise(mean_success_perc = mean(prob_success) * 100, .groups = 'drop')
 
 success_label_dataf
+
+# 3. Percent decline in EXPECTED FLEDGING OUTPUT (last vs first year).
+#    "Fledging output" = the expected number of fledglings, i.e. the
+#    .epred-weighted sum over outcome categories (0,1,2,3), NOT the
+#    probability of success (>0 fledglings) used above. Computed per
+#    posterior draw, then summarised with median + 95% credible interval.
+#    This is the quantity reported in-text as "54.3% lower" (median decline).
+expected_output_drawsf <- fledging_time_drawsf %>%
+  filter(actual_time == min(actual_time) | actual_time == max(actual_time)) %>%
+  mutate(cat_num = as.numeric(as.character(.category))) %>%
+  group_by(.draw, actual_time) %>%
+  summarise(expected_fleds = sum(cat_num * .epred), .groups = 'drop')
+
+pct_decline_output_drawsf <- expected_output_drawsf %>%
+  mutate(year_pos = ifelse(actual_time == min(actual_time), "first", "last")) %>%
+  select(.draw, year_pos, expected_fleds) %>%
+  tidyr::pivot_wider(names_from = year_pos, values_from = expected_fleds) %>%
+  mutate(pct_decline = (first - last) / first * 100)
+
+pct_decline_output_summaryf <- pct_decline_output_drawsf %>%
+  summarise(
+    mean_pct_decline = mean(pct_decline),
+    median_pct_decline = median(pct_decline),
+    lower95 = quantile(pct_decline, 0.025),
+    upper95 = quantile(pct_decline, 0.975)
+  )
+
+pct_decline_output_summaryf
 ```
 
 ## Males
@@ -577,19 +842,7 @@ success_label_dataf
 #| warning: false
 #| eval: false
 
-mean_fledging_yearm <- mean(dat_male_fledging$ori_time)
-fledging_time_drawsm <- fledging_modelm %>%
-  epred_draws(
-    newdata = expand.grid(
-      TIME = seq(min(dat_male_fledging$TIME), max(dat_male_fledging$TIME), length.out = 100),
-      AGE = mean(dat_male_fledging$AGE),
-      ZX5MISMATCH = mean(dat_male_fledging$ZX5MISMATCH),
-      AFR = mean(dat_male_fledging$AFR),
-      LONGEVITY = mean(dat_male_fledging$LONGEVITY)
-    ),
-    re_formula = NA, dpar = TRUE
-  ) %>%
-  mutate(actual_time = TIME + mean_fledging_yearm)
+fledging_time_drawsm <- read_precomputed_draw("fledging_time_drawsm.rds")
 
 # Calculate observed proportions for raw points
 fledging_props_timem <- dat_male_fledging %>%
@@ -598,11 +851,8 @@ fledging_props_timem <- dat_male_fledging %>%
   mutate(proportion = n / sum(n))
 
 
-# 1. Calculate posterior draws for "success" (fledglings > 0)
-fledging_success_drawsm <- fledging_time_drawsm %>%
-  filter(.category != "0") %>%
-  group_by(across(-c(.epred, .category))) %>% # Groups by all cols except .epred & .category
-  summarize(prob_success = sum(.epred), .groups = 'drop')
+# 1. Load posterior draws for "success" (fledglings > 0)
+fledging_success_drawsm <- read_precomputed_draw("fledging_success_drawsm.rds")
 
 # 2. Calculate observed proportions for "success"
 fledging_success_props_timem <- dat_male_fledging %>%
@@ -624,6 +874,33 @@ success_label_datam <- fledging_success_drawsm %>%
   group_by(actual_time) %>%
   summarise(mean_success_perc = mean(prob_success) * 100, .groups = 'drop')
 success_label_datam
+
+# 3. Percent decline in EXPECTED FLEDGING OUTPUT (last vs first year).
+#    "Fledging output" = the expected number of fledglings, i.e. the
+#    .epred-weighted sum over outcome categories (0,1,2,3), NOT the
+#    probability of success (>0 fledglings) used above. Computed per
+#    posterior draw, then summarised with median + 95% credible interval.
+expected_output_drawsm <- fledging_time_drawsm %>%
+  filter(actual_time == min(actual_time) | actual_time == max(actual_time)) %>%
+  mutate(cat_num = as.numeric(as.character(.category))) %>%
+  group_by(.draw, actual_time) %>%
+  summarise(expected_fleds = sum(cat_num * .epred), .groups = 'drop')
+
+pct_decline_output_drawsm <- expected_output_drawsm %>%
+  mutate(year_pos = ifelse(actual_time == min(actual_time), "first", "last")) %>%
+  select(.draw, year_pos, expected_fleds) %>%
+  tidyr::pivot_wider(names_from = year_pos, values_from = expected_fleds) %>%
+  mutate(pct_decline = (first - last) / first * 100)
+
+pct_decline_output_summarym <- pct_decline_output_drawsm %>%
+  summarise(
+    mean_pct_decline = mean(pct_decline),
+    median_pct_decline = median(pct_decline),
+    lower95 = quantile(pct_decline, 0.025),
+    upper95 = quantile(pct_decline, 0.975)
+  )
+
+pct_decline_output_summarym
 ```
 :::
 
@@ -812,20 +1089,7 @@ This figure summarizes age-related patterns in phenological mismatch and fledgin
 #| warning: false
 #| eval: false
 
-mean_of_original_age_female <- mean(dat_female_mismatch$ori_age)
-
-age_draws_female <- mismatch_modelf %>%
-  epred_draws(
-    newdata = expand.grid(
-      AGE = seq(min(dat_female_mismatch$AGE), max(dat_female_mismatch$AGE), length.out = 100),
-      TIME = mean(dat_female_mismatch$TIME),
-      AFR = mean(dat_female_mismatch$AFR),
-      LONGEVITY = mean(dat_female_mismatch$LONGEVITY)
-    ),
-    re_formula = NA,
-    dpar = TRUE
-  ) %>%
-  mutate(actual_age = AGE + mean_of_original_age_female)
+age_draws_female <- read_precomputed_draw("age_draws_female.rds")
 
 dat_count_mismatch_age_female <- dat_female_mismatch %>%
   group_by(ori_age, X5MISMATCH) %>%
@@ -843,19 +1107,7 @@ dat_count_sigma_age_female <- dat_with_residuals_female %>%
 #| message: false
 #| warning: false
 #| eval: false
-mean_of_original_age_male <- mean(dat_male_mismatch$ori_age)
-age_draws_male <- mismatch_modelm %>%
-  epred_draws(
-    newdata = expand.grid(
-      AGE = seq(min(dat_male_mismatch$AGE), max(dat_male_mismatch$AGE), length.out = 100),
-      TIME = mean(dat_male_mismatch$TIME),
-      AFR = mean(dat_male_mismatch$AFR),
-      LONGEVITY = mean(dat_male_mismatch$LONGEVITY)
-    ),
-    re_formula = NA,
-    dpar = TRUE
-  ) %>%
-  mutate(actual_age = AGE + mean_of_original_age_male)
+age_draws_male <- read_precomputed_draw("age_draws_male.rds")
 
 dat_count_mismatch_age_male <- dat_male_mismatch %>%
   group_by(ori_age, X5MISMATCH) %>%
@@ -880,23 +1132,7 @@ To visualize individual variation, predictions for a random sample of 20 individ
 #| eval: false
 
 
-set.seed(42) # For reproducible random sampling
-num_to_sample <- 50
-rings_to_plot_female <- sample(unique(dat_female_mismatch$RING), num_to_sample)
-
-newdata_grid_female <- expand.grid(
-  AGE = seq(min(dat_female_mismatch$AGE), max(dat_female_mismatch$AGE), length.out = 100),
-  RING = rings_to_plot_female,
-  TIME = mean(dat_female_mismatch$TIME),
-  AFR = mean(dat_female_mismatch$AFR),
-  LONGEVITY = mean(dat_female_mismatch$LONGEVITY)
-)
-
-individual_predictions_female <- mismatch_modelf %>%
-  add_linpred_draws(newdata = newdata_grid_female, re_formula = ~(1 + AGE | RING)) %>%
-  group_by(RING, AGE) %>%
-  summarise(.value = median(.linpred), .groups = "drop") %>%
-  mutate(actual_age = AGE + mean_of_original_age_female)
+individual_predictions_female <- read_precomputed_draw("individual_predictions_female.rds")
 ```
 
 ## Males
@@ -907,24 +1143,7 @@ individual_predictions_female <- mismatch_modelf %>%
 #| warning: false
 #| eval: false
 
-set.seed(42) 
-num_to_sample <- 50
-rings_to_plot_male <- sample(unique(dat_male_mismatch$RING), num_to_sample)
-
-
-newdata_grid_male <- expand.grid(
-  AGE = seq(min(dat_male_mismatch$AGE), max(dat_male_mismatch$AGE), length.out = 100),
-  RING = rings_to_plot_male,
-  TIME = mean(dat_male_mismatch$TIME),
-  AFR = mean(dat_male_mismatch$AFR),
-  LONGEVITY = mean(dat_male_mismatch$LONGEVITY)
-)
-
-individual_predictions_male <- mismatch_modelm %>%
-  add_linpred_draws(newdata = newdata_grid_male, re_formula = ~(1 + AGE | RING)) %>%
-  group_by(RING, AGE) %>%
-  summarise(.value = median(.linpred), .groups = "drop") %>%
-  mutate(actual_age = AGE + mean_of_original_age_male)
+individual_predictions_male <- read_precomputed_draw("individual_predictions_male.rds")
 ```
 :::
 
@@ -1035,26 +1254,8 @@ Predictions are now generated from the fledgling success model across the range 
 #| warning: false
 #| eval: false
 
-mean_of_original_fledging_agef <- mean(dat_female_fledging$ori_age)
-
-fledging_age_drawsf <- fledging_modelf %>%
-  epred_draws(
-    newdata = expand.grid(
-      AGE = seq(min(dat_female_fledging$AGE), max(dat_female_fledging$AGE), length.out = 100),
-      TIME = mean(dat_female_fledging$TIME),
-      ZX5MISMATCH = mean(dat_female_fledging$ZX5MISMATCH),
-      AFR = mean(dat_female_fledging$AFR),
-      LONGEVITY = mean(dat_female_fledging$LONGEVITY)
-    ),
-    re_formula = NA,
-    dpar = TRUE 
-  ) %>%
-  mutate(actual_age = AGE + mean_of_original_fledging_agef)
-
-fledging_success_draws_agef <- fledging_age_drawsf %>%
-  filter(.category != "0") %>%
-  group_by(across(-c(.epred, .category))) %>% # Groups by all cols except .epred & .category
-  summarize(prob_success = sum(.epred), .groups = 'drop')
+fledging_age_drawsf <- read_precomputed_draw("fledging_age_drawsf.rds")
+fledging_success_draws_agef <- read_precomputed_draw("fledging_success_draws_agef.rds")
 
 fledging_success_props_agef <- dat_female_fledging%>%
   mutate(SUCCESS = ifelse(FLEDS == "0", "Failure (0)", "Success (1+)")) %>%
@@ -1081,27 +1282,8 @@ fledging_success_props_agef <- dat_female_fledging%>%
 #| warning: false
 #| eval: false
 
-mean_of_original_fledging_agem <- mean(dat_male_fledging$ori_age)
-
-fledging_age_drawsm <- fledging_modelm %>%
-  epred_draws(
-    newdata = expand.grid(
-      AGE = seq(min(dat_male_fledging$AGE), max(dat_male_fledging$AGE), length.out = 100),
-      TIME = mean(dat_male_fledging$TIME),
-      ZX5MISMATCH = mean(dat_male_fledging$ZX5MISMATCH),
-      AFR = mean(dat_male_fledging$AFR),
-      LONGEVITY = mean(dat_male_fledging$LONGEVITY)
-    ),
-    re_formula = NA,
-    dpar = TRUE 
-  ) %>%
-  mutate(actual_age = AGE + mean_of_original_fledging_agem)
-
-
-fledging_success_draws_agem <- fledging_age_drawsm %>%
-  filter(.category != "0") %>%
-  group_by(across(-c(.epred, .category))) %>% # Groups by all cols except .epred & .category
-  summarize(prob_success = sum(.epred), .groups = 'drop')
+fledging_age_drawsm <- read_precomputed_draw("fledging_age_drawsm.rds")
+fledging_success_draws_agem <- read_precomputed_draw("fledging_success_draws_agem.rds")
 
 fledging_success_props_agem <- dat_male_fledging%>%
   mutate(SUCCESS = ifelse(FLEDS == "0", "Failure (0)", "Success (1+)")) %>%
@@ -1225,37 +1407,9 @@ Model predictions are generated for fledgling success across the full range of o
 #| warning: false
 #| eval: false
 
-mean_of_original_mismatchf <- mean(dat_female_fledging$X5MISMATCH, na.rm = TRUE)
-# --- 1. Generate Raw Predictions ---
-mismatch_drawsf <- fledging_modelf %>%
-  epred_draws(
-    newdata = expand.grid(
-      ZX5MISMATCH = seq(min(dat_female_fledging$ZX5MISMATCH), max(dat_female_fledging$ZX5MISMATCH), length.out = 100),
-      TIME = mean(dat_female_fledging$TIME),
-      AGE = mean(dat_female_fledging$AGE),
-      AFR = mean(dat_female_fledging$AFR),
-      LONGEVITY = mean(dat_female_fledging$LONGEVITY)
-    ),
-    re_formula = NA,
-    dpar = TRUE
-  ) %>%
-  mutate(actual_mismatch = ZX5MISMATCH + mean_of_original_mismatchf)
-
-
-# --- 2. Aggregate Predictions into 3 Categories (0, 1-2, 3) ---
-fledging_grouped_drawsf <- mismatch_drawsf %>%
-  # Create the new grouping variable based on .category
-  mutate(fled_group = case_when(
-    .category == "0" ~ "0",
-    .category %in% c("1", "2") ~ "1-2", # Grouping 1 and 2 to see the quadratic effect
-    .category == "3" ~ "3",
-    TRUE ~ NA_character_ # Just in case there are >3, or handle accordingly
-  )) %>%
-  # Filter out any categories we aren't interested in (if any exist)
-  filter(!is.na(fled_group)) %>%
-  # Sum the probabilities (.epred) within the new groups for every draw
-  group_by(actual_mismatch, .draw, fled_group) %>% 
-  summarize(prob_val = sum(.epred), .groups = 'drop') 
+# --- 1. Load raw and grouped predictions ---
+mismatch_drawsf <- read_precomputed_draw("mismatch_drawsf.rds")
+fledging_grouped_drawsf <- read_precomputed_draw("fledging_grouped_drawsf.rds")
 
 # --- 3. Calculate Observed Proportions for the 3 Categories ---
 fledging_grouped_propsf <- dat_female_fledging %>%
@@ -1299,37 +1453,8 @@ group_mismatch_label_dataf
 #| warning: false
 #| eval: false
 
-mean_of_original_mismatchm <- mean(dat_male_fledging$X5MISMATCH, na.rm = TRUE)
-
-mismatch_drawsm <- fledging_modelm %>%
-  epred_draws(
-    newdata = expand.grid(
-      ZX5MISMATCH = seq(min(dat_male_fledging$ZX5MISMATCH), max(dat_male_fledging$ZX5MISMATCH), length.out = 100),
-      TIME = mean(dat_male_fledging$TIME),
-      AGE = mean(dat_male_fledging$AGE),
-      AFR = mean(dat_male_fledging$AFR),
-      LONGEVITY = mean(dat_male_fledging$LONGEVITY)
-    ),
-    re_formula = NA,
-    dpar = TRUE
-  ) %>%
-  mutate(actual_mismatch = ZX5MISMATCH + mean_of_original_mismatchm)
-
-
-# --- 2. Aggregate Predictions into 3 Categories (0, 1-2, 3) ---
-fledging_grouped_drawsm <- mismatch_drawsm %>%
-  # Create the new grouping variable based on .category
-  mutate(fled_group = case_when(
-    .category == "0" ~ "0",
-    .category %in% c("1", "2") ~ "1-2", # Grouping 1 and 2 to see the quadratic effect
-    .category == "3" ~ "3",
-    TRUE ~ NA_character_ # Just in case there are >3, or handle accordingly
-  )) %>%
-
-  filter(!is.na(fled_group)) %>%
-  # Sum the probabilities (.epred) within the new groups for every draw
-  group_by(actual_mismatch, .draw, fled_group) %>% 
-  summarize(prob_val = sum(.epred), .groups = 'drop') 
+mismatch_drawsm <- read_precomputed_draw("mismatch_drawsm.rds")
+fledging_grouped_drawsm <- read_precomputed_draw("fledging_grouped_drawsm.rds")
 
 # --- 3. Calculate Observed Proportions for the 3 Categories ---
 fledging_grouped_propsm <- dat_male_fledging %>%
