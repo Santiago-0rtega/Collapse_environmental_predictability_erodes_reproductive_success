@@ -152,6 +152,4 @@ ggsave(
 plot_estimated_fleds_violin
 ```
 
-## Interpretation
 
-The 2003 and 2023 posterior distributions are well separated in their means, supporting the directional claim in the main text that expected fledglings declined over the study period. However, each distribution itself is wide, and the 95% credible intervals both span roughly one fledgling — which is why the percent-change estimate computed between these two years carries a wide credible interval even though the overall downward shift in the mean is clear.

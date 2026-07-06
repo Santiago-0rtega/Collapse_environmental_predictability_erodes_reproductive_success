@@ -134,12 +134,11 @@ p {
 ========================= */
 .quarto-title-banner {
   background:
-    linear-gradient(135deg, rgba(25,34,25,0.95), rgba(42,95,64,0.88)),
-    url("images/Sula.JPG") center/cover no-repeat;
+    linear-gradient(135deg, var(--bfb-deep) 0%, var(--bfb-ocean) 55%, var(--bfb-sea) 100%);
   color: white;
   padding-top: 5rem;
   padding-bottom: 4rem;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .quarto-title-banner h1,
@@ -327,14 +326,42 @@ blockquote {
 }
 
 /* =========================
-   HERO PHOTO (index lead section)
+   HERO GALLERY (index feature photos)
 ========================= */
-.hero-photo {
+
+/* Quarto auto-inserts the book cover-image into the page body; we feature
+   the photos ourselves in .hero-gallery, so hide the stray floating copy
+   (the og:image social-share meta is unaffected). */
+.quarto-cover-image {
+  display: none;
+}
+
+.hero-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 0.5rem 0 2.5rem;
+}
+
+.hero-gallery img {
   width: 100%;
-  height: 260px;
+  height: 460px;
   object-fit: cover;
-  border-radius: 6px;
-  box-shadow: var(--bfb-shadow);
+  border-radius: 10px;
+  box-shadow: 0 14px 36px rgba(25, 34, 25, 0.18);
+}
+
+@media (max-width: 900px) {
+  .hero-gallery {
+    grid-template-columns: 1fr;
+  }
+  .hero-gallery img {
+    height: 320px;
+  }
+}
+
+body.quarto-dark .hero-gallery img {
+  border-color: #1c241c;
 }
 
 /* =========================

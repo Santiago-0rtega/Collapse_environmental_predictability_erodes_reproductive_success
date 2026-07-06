@@ -535,17 +535,6 @@
     ]
   },
   {
-    "objectID": "estimated-fleds.html#interpretation",
-    "href": "estimated-fleds.html#interpretation",
-    "title": "Uncertainty in expected fledglings",
-    "section": "Interpretation",
-    "text": "Interpretation\nThe 2003 and 2023 posterior distributions are well separated in their means, supporting the directional claim in the main text that expected fledglings declined over the study period. However, each distribution itself is wide, and the 95% credible intervals both span roughly one fledgling — which is why the percent-change estimate computed between these two years carries a wide credible interval even though the overall downward shift in the mean is clear.",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Uncertainty in expected fledglings</span>"
-    ]
-  },
-  {
     "objectID": "code_figures.html",
     "href": "code_figures.html",
     "title": "Code for figures",

@@ -6,17 +6,16 @@ toc: false
 title-block-banner: true
 ---
 
-:::::: columns
-:::: {.column width="60%"}
+```{=html}
+<div class="hero-gallery">
+  <img src="images/sula-web.jpg" alt="Adult blue-footed booby brooding a downy chick on the nest">
+  <img src="images/booby-portrait-web.jpg" alt="Close-up portrait of an adult blue-footed booby">
+</div>
+```
+
 ::: lead
 This website presents the full reproducible workflow for our study of how increasing environmental unpredictability affects bloom timing, phenological mismatch, and reproductive success in the Blue-footed Booby.
 :::
-::::
-
-::: {.column width="40%"}
-![](images/booby-portrait.jpg){.hero-photo}
-:::
-::::::
 
 ::: callout-important
 ## Core idea

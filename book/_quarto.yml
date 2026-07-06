@@ -6,7 +6,7 @@ project:
     - images
 
 book:
-  title: "The collapse of environmental predictability erodes reproductive success in a tropical seabird"
+  title: "Declining environmental predictability erodes reproduction in a tropical seabird"
   title-short: "Phenological mismatch in a tropical predator"
   subtitle: "A reproducible analysis website for the Blue-footed Booby project"
   author:
@@ -21,7 +21,7 @@ book:
 
   date: last-modified
   date-format: "MMMM D, YYYY"
-  cover-image: images/Sula.JPG
+  cover-image: images/sula-web.jpg
 
   chapters:
     - index.qmd
@@ -45,7 +45,7 @@ book:
     right:
       - text: "GitHub"
         icon: github
-        href: https://github.com/Santiago-0rtega/Collapse_environmental_predictability_erodes_reproductive_success
+        href: https://santiago-0rtega.github.io/Declining_environmental_predictability_erodes_reproduction_tropical_seabird/
       - text: "References"
         href: references.qmd
 
@@ -57,7 +57,7 @@ book:
 
   page-navigation: true
   reader-mode: true
-  repo-url: https://github.com/Santiago-0rtega/Collapse_environmental_predictability_erodes_reproductive_success
+  repo-url: https://santiago-0rtega.github.io/Declining_environmental_predictability_erodes_reproduction_tropical_seabird/
   repo-actions: [source, issue]
 
 
