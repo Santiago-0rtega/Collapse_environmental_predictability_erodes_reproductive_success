@@ -14,7 +14,7 @@
     "href": "index.html#website-structure",
     "title": "Phenological mismatch in the Blue-footed Booby",
     "section": "",
-    "text": "Main analysis\n\n\n\n\n1. Bloom onset\nDefinition, extraction, and temporal patterns in bloom timing.\nOpen chapter\n\n\n\n2. Phenological mismatches\nQuantification of mismatch between breeding and marine productivity.\nOpen chapter\n\n\n\n3. Model fitting\nStatistical models linking mismatch and reproductive outcomes.\nOpen chapter\n\n\n\n\n\n\n4. Diagnostics\nModel checks, posterior diagnostics, and robustness assessment.\nOpen chapter\n\n\n\n5. Full summaries\nComplete model summaries and supporting outputs.\nOpen chapter\n\n\n\n\nAppendices\n\n\n\n\nSensitivity analyses\nAlternative bloom definitions and robustness checks.\nOpen appendix\n\n\n\nFigure code\nCode used to generate figures and visual outputs.\nOpen appendix",
+    "text": "Main analysis\n\n\n\n\n1. Bloom onset\nDefinition, extraction, and temporal patterns in bloom timing.\nOpen chapter\n\n\n\n2. Phenological mismatches\nQuantification of mismatch between breeding and marine productivity.\nOpen chapter\n\n\n\n3. Model fitting\nStatistical models linking mismatch and reproductive outcomes.\nOpen chapter\n\n\n\n\n\n\n4. Diagnostics\nModel checks, posterior diagnostics, and robustness assessment.\nOpen chapter\n\n\n\n5. Full summaries\nComplete model summaries and supporting outputs.\nOpen chapter\n\n\n\n\nAppendices\n\n\n\n\nSensitivity analyses: Bloom onset thresholds\nAlternative bloom definitions and robustness checks.\nOpen appendix\n\n\n\nSensitivity analysis: excluding 2015-2016\nRobustness of mismatch and nest-success models to the 2015-2016 ENSO years.\nOpen appendix\n\n\n\nIndividual mismatch trajectories\nIndividual random-slope trajectories behind the population-level age trend.\nOpen appendix\n\n\n\n\n\n\nUncertainty in expected fledglings\nPosterior credible intervals behind the reported percent decline in nest success.\nOpen appendix\n\n\n\nFigure code\nCode used to generate figures and visual outputs.\nOpen appendix",
     "crumbs": [
       "<span class='chapter-number'>1</span>  <span class='chapter-title'>Phenological mismatch in the Blue-footed Booby</span>"
     ]
@@ -565,6 +565,61 @@
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>10</span>  <span class='chapter-title'>Code for figures</span>"
+    ]
+  },
+  {
+    "objectID": "estimated-fleds.html",
+    "href": "estimated-fleds.html",
+    "title": "Uncertainty in expected fledglings",
+    "section": "",
+    "text": "Computing expected fledglings at the study-period endpoints\nFor each sex, the retained Q17 model is used to generate posterior-predicted category probabilities at the first and last study year (all other predictors held at their centred/mean values, random effects excluded via re_formula = NA). Category probabilities are converted to an expected fledgling count at each endpoint by taking the probability-weighted sum over the outcome categories (0, 1, 2, 3 fledglings), retaining all posterior draws so the credible interval reflects the full posterior rather than a single ratio of posterior means.\nShow expected-fledglings endpoint computationfemale_dat_raw &lt;- read.csv(here::here(\"..\", \"data\", \"Lay_date_mismatches_250702.csv\"))\nmale_dat_raw   &lt;- read.csv(here::here(\"..\", \"data\", \"Lay_date_mismatches_250702.csv\"))\n\ndat_female_fledging &lt;- female_dat_raw %&gt;%\n  filter(SEX == 1) %&gt;%\n  mutate(\n    ori_time = as.numeric(YEAR),\n    TIME = scale(YEAR, center = TRUE, scale = FALSE)[, 1]\n  )\n\ndat_male_fledging &lt;- male_dat_raw %&gt;%\n  filter(SEX == 0) %&gt;%\n  mutate(\n    ori_time = as.numeric(YEAR),\n    TIME = scale(YEAR, center = TRUE, scale = FALSE)[, 1]\n  )\n\nfit_female &lt;- readRDS(here::here(\"..\", \"Rdata\", \"female_fit_Q17.rds\"))\nfit_male   &lt;- readRDS(here::here(\"..\", \"Rdata\", \"male_fit_Q17.rds\"))\n\ncompute_expected_fleds_endpoints &lt;- function(fit, dat) {\n  mean_year &lt;- mean(dat$ori_time)\n\n  draws &lt;- fit %&gt;%\n    epred_draws(\n      newdata = expand.grid(\n        TIME = c(min(dat$TIME), max(dat$TIME)),\n        ZX5MISMATCH = 0,\n        AGE = 0,\n        AFR = 0,\n        LONGEVITY = 0\n      ),\n      re_formula = NA\n    ) %&gt;%\n    mutate(\n      actual_time = round(TIME + mean_year),\n      cat_num = as.numeric(as.character(.category))\n    )\n\n  # Expected fledglings per draw, per endpoint: probability-weighted sum over categories\n  draws %&gt;%\n    group_by(.draw, actual_time) %&gt;%\n    summarise(expected_fleds = sum(cat_num * .epred), .groups = \"drop\")\n}\n\nendpoints_female &lt;- compute_expected_fleds_endpoints(fit_female, dat_female_fledging) %&gt;% mutate(sex = \"Females\")\nendpoints_male   &lt;- compute_expected_fleds_endpoints(fit_male, dat_male_fledging) %&gt;% mutate(sex = \"Males\")\n\nendpoints_all &lt;- bind_rows(endpoints_female, endpoints_male) %&gt;%\n  mutate(year = factor(actual_time))",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Uncertainty in expected fledglings</span>"
+    ]
+  },
+  {
+    "objectID": "estimated-fleds.html#percent-change-for-reference",
+    "href": "estimated-fleds.html#percent-change-for-reference",
+    "title": "Uncertainty in expected fledglings",
+    "section": "Percent change, for reference",
+    "text": "Percent change, for reference\nThe main-text point estimate is the median percent change in expected fledglings between the first and last year, computed per posterior draw from the endpoint distributions above.\n\nShow percent-change summary computationpct_change_summary &lt;- endpoints_all %&gt;%\n  group_by(sex, .draw) %&gt;%\n  mutate(period = if_else(actual_time == min(actual_time), \"first\", \"last\")) %&gt;%\n  ungroup() %&gt;%\n  select(sex, .draw, period, expected_fleds) %&gt;%\n  pivot_wider(names_from = period, values_from = expected_fleds) %&gt;%\n  mutate(pct_change = 100 * (last - first) / first) %&gt;%\n  group_by(sex) %&gt;%\n  summarise(\n    median_pct_change = median(pct_change),\n    l95 = quantile(pct_change, 0.025),\n    u95 = quantile(pct_change, 0.975),\n    .groups = \"drop\"\n  )\n\npct_change_summary\n\n# A tibble: 2 × 4\n  sex     median_pct_change   l95   u95\n  &lt;chr&gt;               &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;\n1 Females             -54.3 -79.7 -3.79\n2 Males               -59.6 -83.3 -9.19",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Uncertainty in expected fledglings</span>"
+    ]
+  },
+  {
+    "objectID": "estimated-fleds.html#visualizing-the-trend-and-its-uncertainty",
+    "href": "estimated-fleds.html#visualizing-the-trend-and-its-uncertainty",
+    "title": "Uncertainty in expected fledglings",
+    "section": "Visualizing the trend and its uncertainty",
+    "text": "Visualizing the trend and its uncertainty\n\nShow plotting codeplot_estimated_fleds_over_time &lt;- ggplot(trend_all, aes(x = actual_time, y = expected_fleds)) +\n  stat_lineribbon(aes(fill = sex), .width = c(0.5, 0.8, 0.95), alpha = 0.5) +\n  stat_lineribbon(fill = NA, color = \"black\", linewidth = 0.8) +\n  facet_wrap(~sex, ncol = 1) +\n  scale_fill_manual(values = c(\"Females\" = \"#2a5f40\", \"Males\" = \"#c06b10\")) +\n  scale_x_continuous(breaks = seq(2003, 2023, 2)) +\n  labs(\n    x = \"Year\",\n    y = \"Expected number of fledglings\",\n    subtitle = \"Posterior expected fledglings over time, with credible interval bands\"\n  ) +\n  theme_classic(base_size = 11) +\n  theme(legend.position = \"none\", plot.subtitle = element_text(face = \"bold\"))\n\nggsave(\n  here::here(\"..\", \"Plots\", \"estimated_fledglings_over_time.pdf\"),\n  plot_estimated_fleds_over_time,\n  width = 8, height = 8\n)\nggsave(\n  here::here(\"..\", \"Plots\", \"estimated_fledglings_over_time.jpg\"),\n  plot_estimated_fleds_over_time,\n  width = 8, height = 8, dpi = 300\n)\n\nplot_estimated_fleds_over_time\n\n\n\n\n\n\nFigure 10.1: Posterior expected fledglings across the study period, by sex. The black line shows the posterior median; shaded bands show 50%, 80%, and 95% credible intervals, which widen toward both ends of the study period.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Uncertainty in expected fledglings</span>"
+    ]
+  },
+  {
+    "objectID": "estimated-fleds.html#interpretation",
+    "href": "estimated-fleds.html#interpretation",
+    "title": "Uncertainty in expected fledglings",
+    "section": "Interpretation",
+    "text": "Interpretation\nThe 2003 and 2023 posterior distributions are well separated in their means, supporting the directional claim in the main text that expected fledglings declined over the study period. However, each distribution itself is wide, and the 95% credible intervals both span roughly one fledgling — which is why the percent-change estimate computed between these two years carries a wide credible interval even though the overall downward shift in the mean is clear.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Uncertainty in expected fledglings</span>"
+    ]
+  },
+  {
+    "objectID": "estimated-fleds.html#visualizing-the-uncertainty-2003-vs-2023",
+    "href": "estimated-fleds.html#visualizing-the-uncertainty-2003-vs-2023",
+    "title": "Uncertainty in expected fledglings",
+    "section": "Visualizing the uncertainty: 2003 vs 2023",
+    "text": "Visualizing the uncertainty: 2003 vs 2023\nRather than just the summary percent change, the full posterior distributions of expected fledglings at the first and last study year are shown below as violins, with the posterior mean (point) and 95% credible interval (error bar) overlaid.\n\nShow plotting codeplot_estimated_fleds_violin &lt;- ggplot(endpoints_all, aes(x = year, y = expected_fleds, fill = year)) +\n  geom_violin(alpha = 0.6, color = NA, trim = TRUE) +\n  stat_summary(fun = mean, geom = \"point\", size = 2.5, color = \"black\") +\n  stat_summary(\n    fun.data = function(x) {\n      data.frame(y = mean(x), ymin = quantile(x, 0.025), ymax = quantile(x, 0.975))\n    },\n    geom = \"errorbar\", width = 0.1, linewidth = 0.8, color = \"black\"\n  ) +\n  facet_wrap(~sex) +\n  scale_fill_manual(values = setNames(c(\"#2a5f40\", \"#c06b10\"), levels(endpoints_all$year))) +\n  labs(\n    x = \"Year\",\n    y = \"Expected number of fledglings\",\n    subtitle = \"Posterior expected fledglings: 2003 vs 2023 (mean ± 95% CI)\"\n  ) +\n  theme_classic(base_size = 11) +\n  theme(legend.position = \"none\", plot.subtitle = element_text(face = \"bold\"))\n\nggsave(\n  here::here(\"..\", \"Plots\", \"estimated_fledglings_violin.pdf\"),\n  plot_estimated_fleds_violin,\n  width = 8, height = 5\n)\nggsave(\n  here::here(\"..\", \"Plots\", \"estimated_fledglings_violin.jpg\"),\n  plot_estimated_fleds_violin,\n  width = 8, height = 5, dpi = 300\n)\n\nplot_estimated_fleds_violin\n\n\n\n\n\n\nFigure 10.1: Posterior expected fledglings in the first (2003) and last (2023) study year, by sex. Violins show the full posterior distribution; points and error bars show the posterior mean and 95% credible interval.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>Uncertainty in expected fledglings</span>"
     ]
   }
 ]

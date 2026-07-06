@@ -1,72 +1,157 @@
 ---
-title: "Expected fledglings"
+title: "Uncertainty in expected fledglings"
+subtitle: "Posterior credible intervals behind the reported percent decline in nest success"
+unnumbered: true
+toc: true
+toc-depth: 2
 ---
 
+::: {.lead}
+The main text reports that expected fledging output was substantially lower in the last study year than in the first, based on the retained cumulative-probit nest-success model (`Q17`). That point estimate is well supported directionally, but the surrounding credible interval is wide. This appendix shows the full posterior distributions of expected fledglings at the first (2003) and last (2023) study years, side by side, so the width of the credible interval is visible alongside the shift in the mean.
+:::
+
 ```{r}
-#| label: setup-final-summaries
+#| label: setup-estimated-fleds
 #| include: false
 
-# Load libraries needed for this chapter
-pacman::p_load(here, brms, tidyverse)
+pacman::p_load(here, brms, dplyr, tidyr, ggplot2, tidybayes)
 ```
 
-```{r}
-fit_ord <- readRDS(here::here("..","Rdata", "female_fit_Q17.rds"))
-```
+## Computing expected fledglings at the study-period endpoints
+
+For each sex, the retained `Q17` model is used to generate posterior-predicted category probabilities at the first and last study year (all other predictors held at their centred/mean values, random effects excluded via `re_formula = NA`). Category probabilities are converted to an expected fledgling count at each endpoint by taking the probability-weighted sum over the outcome categories (0, 1, 2, 3 fledglings), retaining all posterior draws so the credible interval reflects the full posterior rather than a single ratio of posterior means.
 
 ```{r}
-range(fit_ord$data$TIME)
+#| label: compute-expected-fleds-endpoints
+#| eval: true
+#| code-fold: true
+#| code-summary: "Show expected-fledglings endpoint computation"
+
+female_dat_raw <- read.csv(here::here("..", "data", "Lay_date_mismatches_250702.csv"))
+male_dat_raw   <- read.csv(here::here("..", "data", "Lay_date_mismatches_250702.csv"))
+
+dat_female_fledging <- female_dat_raw %>%
+  filter(SEX == 1) %>%
+  mutate(
+    ori_time = as.numeric(YEAR),
+    TIME = scale(YEAR, center = TRUE, scale = FALSE)[, 1]
+  )
+
+dat_male_fledging <- male_dat_raw %>%
+  filter(SEX == 0) %>%
+  mutate(
+    ori_time = as.numeric(YEAR),
+    TIME = scale(YEAR, center = TRUE, scale = FALSE)[, 1]
+  )
+
+fit_female <- readRDS(here::here("..", "Rdata", "female_fit_Q17.rds"))
+fit_male   <- readRDS(here::here("..", "Rdata", "male_fit_Q17.rds"))
+
+compute_expected_fleds_endpoints <- function(fit, dat) {
+  mean_year <- mean(dat$ori_time)
+
+  draws <- fit %>%
+    epred_draws(
+      newdata = expand.grid(
+        TIME = c(min(dat$TIME), max(dat$TIME)),
+        ZX5MISMATCH = 0,
+        AGE = 0,
+        AFR = 0,
+        LONGEVITY = 0
+      ),
+      re_formula = NA
+    ) %>%
+    mutate(
+      actual_time = round(TIME + mean_year),
+      cat_num = as.numeric(as.character(.category))
+    )
+
+  # Expected fledglings per draw, per endpoint: probability-weighted sum over categories
+  draws %>%
+    group_by(.draw, actual_time) %>%
+    summarise(expected_fleds = sum(cat_num * .epred), .groups = "drop")
+}
+
+endpoints_female <- compute_expected_fleds_endpoints(fit_female, dat_female_fledging) %>% mutate(sex = "Females")
+endpoints_male   <- compute_expected_fleds_endpoints(fit_male, dat_male_fledging) %>% mutate(sex = "Males")
+
+endpoints_all <- bind_rows(endpoints_female, endpoints_male) %>%
+  mutate(year = factor(actual_time))
 ```
 
-```{r}
-time_early <- -8.643948
-time_late  <-  11.356052
-```
+## Percent change, for reference
+
+The main-text point estimate is the median percent change in expected fledglings between the first and last year, computed per posterior draw from the endpoint distributions above.
 
 ```{r}
-newdat <- tibble(
-  ZX5MISMATCH = c(0, 0),
-  TIME        = c(time_early, time_late),
-  AGE         = c(0, 0),
-  AFR         = c(0, 0),
-  LONGEVITY   = c(0, 0)
+#| label: pct-change-summary
+#| eval: true
+#| code-fold: true
+#| code-summary: "Show percent-change summary computation"
+
+pct_change_summary <- endpoints_all %>%
+  group_by(sex, .draw) %>%
+  mutate(period = if_else(actual_time == min(actual_time), "first", "last")) %>%
+  ungroup() %>%
+  select(sex, .draw, period, expected_fleds) %>%
+  pivot_wider(names_from = period, values_from = expected_fleds) %>%
+  mutate(pct_change = 100 * (last - first) / first) %>%
+  group_by(sex) %>%
+  summarise(
+    median_pct_change = median(pct_change),
+    l95 = quantile(pct_change, 0.025),
+    u95 = quantile(pct_change, 0.975),
+    .groups = "drop"
+  )
+
+pct_change_summary
+```
+
+## Visualizing the uncertainty: 2003 vs 2023
+
+Rather than just the summary percent change, the full posterior distributions of expected fledglings at the first and last study year are shown below as violins, with the posterior mean (point) and 95% credible interval (error bar) overlaid.
+
+```{r}
+#| label: fig-estimated-fleds-violin
+#| fig-width: 8
+#| fig-height: 5
+#| fig-cap: "Posterior expected fledglings in the first (2003) and last (2023) study year, by sex. Violins show the full posterior distribution; points and error bars show the posterior mean and 95% credible interval."
+#| code-fold: true
+#| code-summary: "Show plotting code"
+
+plot_estimated_fleds_violin <- ggplot(endpoints_all, aes(x = year, y = expected_fleds, fill = year)) +
+  geom_violin(alpha = 0.6, color = NA, trim = TRUE) +
+  stat_summary(fun = mean, geom = "point", size = 2.5, color = "black") +
+  stat_summary(
+    fun.data = function(x) {
+      data.frame(y = mean(x), ymin = quantile(x, 0.025), ymax = quantile(x, 0.975))
+    },
+    geom = "errorbar", width = 0.1, linewidth = 0.8, color = "black"
+  ) +
+  facet_wrap(~sex) +
+  scale_fill_manual(values = setNames(c("#2a5f40", "#c06b10"), levels(endpoints_all$year))) +
+  labs(
+    x = "Year",
+    y = "Expected number of fledglings",
+    subtitle = "Posterior expected fledglings: 2003 vs 2023 (mean ± 95% CI)"
+  ) +
+  theme_classic(base_size = 11) +
+  theme(legend.position = "none", plot.subtitle = element_text(face = "bold"))
+
+ggsave(
+  here::here("..", "Plots", "estimated_fledglings_violin.pdf"),
+  plot_estimated_fleds_violin,
+  width = 8, height = 5
 )
-```
-
-```{r}
-# ---- 3) Posterior predicted category probabilities ----
-# re_formula = NA excludes random effects (population-level prediction)
-# Result dimensions are typically: draws x newdata_rows x categories
-ep <- posterior_epred(fit_ord, newdata = newdat, re_formula = NA)
-
-# Check dimensions (optional)
-print(dim(ep))
-# expected: [n_draws, 2, 4]
-
-# ---- 4) Convert category probabilities to expected fledglings ----
-
-
-fled_vals <- c(0, 1, 2, 3)
-
-# Expected fledglings per draw for each row in newdata
-# early = row 1, late = row 2
-E_early <- ep[, 1, ] %*% fled_vals
-E_late  <- ep[, 2, ] %*% fled_vals
-
-# Convert matrices to numeric vectors
-E_early <- as.numeric(E_early)
-E_late  <- as.numeric(E_late)
-
-# ---- 5) Percent change across study period ----
-pct_change <- 100 * (E_late - E_early) / E_early
-
-# ---- 6) Summarize posterior distribution ----
-summary_tbl <- tibble(
-  quantity = c("Expected fledglings (early)", "Expected fledglings (late)", "Percent change"),
-  median   = c(median(E_early), median(E_late), median(pct_change)),
-  l95      = c(quantile(E_early, 0.025), quantile(E_late, 0.025), quantile(pct_change, 0.025)),
-  u95      = c(quantile(E_early, 0.975), quantile(E_late, 0.975), quantile(pct_change, 0.975))
+ggsave(
+  here::here("..", "Plots", "estimated_fledglings_violin.jpg"),
+  plot_estimated_fleds_violin,
+  width = 8, height = 5, dpi = 300
 )
 
-print(summary_tbl)
+plot_estimated_fleds_violin
 ```
+
+## Interpretation
+
+The 2003 and 2023 posterior distributions are well separated in their means, supporting the directional claim in the main text that expected fledglings declined over the study period. However, each distribution itself is wide, and the 95% credible intervals both span roughly one fledgling — which is why the percent-change estimate computed between these two years carries a wide credible interval even though the overall downward shift in the mean is clear.

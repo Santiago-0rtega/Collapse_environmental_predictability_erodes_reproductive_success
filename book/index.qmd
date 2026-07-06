@@ -85,13 +85,45 @@ Complete model summaries and supporting outputs.
 ### Appendices
 
 ::: {.columns}
-::: {.column width="50%"}
+::: {.column width="33%"}
 ::: {.grid-card}
-### Sensitivity analyses
+### Sensitivity analyses: Bloom onset thresholds
 
 Alternative bloom definitions and robustness checks.
 
 [Open appendix](sensitivity_blooms.qmd)
+:::
+:::
+
+::: {.column width="33%"}
+::: {.grid-card}
+### Sensitivity analysis: excluding 2015-2016
+
+Robustness of mismatch and nest-success models to the 2015-2016 ENSO years.
+
+[Open appendix](sensitivity_drop_enso.qmd)
+:::
+:::
+
+::: {.column width="33%"}
+::: {.grid-card}
+### Individual mismatch trajectories
+
+Individual random-slope trajectories behind the population-level age trend.
+
+[Open appendix](SI_individual_mismatch_trajectories.qmd)
+:::
+:::
+:::
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.grid-card}
+### Uncertainty in expected fledglings
+
+Posterior credible intervals behind the reported percent decline in nest success.
+
+[Open appendix](estimated-fleds.qmd)
 :::
 :::
 
