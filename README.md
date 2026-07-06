@@ -4,17 +4,7 @@ This repository contains the data, code, and reproducible analysis website for t
 
 **Declining environmental predictability erodes reproduction in a tropical seabird[**
 
-The reproducible website is available at:
 
-https://santiago-0rtega.github.io/Collapse_environmental_predictability_erodes_reproductive_success/
-
-The GitHub repository is available at:
-
-https://github.com/Santiago-0rtega/Collapse_environmental_predictability_erodes_reproductive_success
-
-A stable repository release containing the project data and rendered webpage is available as:
-
-**Repository data and webpage**, released 24 March 2026.
 
 ## Overview
 
