@@ -1,8 +1,8 @@
-# The collapse of environmental predictability erodes reproductive success in a tropical seabird
+
 
 This repository contains the data, code, and reproducible analysis website for the manuscript:
 
-**The collapse of environmental predictability erodes reproductive success in a tropical seabird**
+**Declining environmental predictability erodes reproduction in a tropical seabird[**
 
 The reproducible website is available at:
 
